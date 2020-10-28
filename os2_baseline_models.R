@@ -60,7 +60,7 @@ colnames(AA)<-c("ANAP1_Cr", "ANAP2_Cr","AFLU2_Cr","APHE9_Cr", "APYR1_Cr","TAPAHs
 bio_names<- c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
 
 ###section A#########################################################
-####test the roadlength within 100m buffers effect on concentrations##
+####test the distance to roads effect on concentrations##
 
 dist.coefs<-list()
 
@@ -84,9 +84,9 @@ for (i in 1:6) {
 names(dist.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
 
 
-###section B#########################################################
+###section B###############################################################
 ####test the in or outside 100m of a major road effect on concentrations##
-
+############################################################################
 M100.coefs<-list()
 
 
@@ -110,9 +110,9 @@ names(M100.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
 
 
 
-###section C#########################################################
-####test the roadlength within 100m buffers effect on concentrations##
-
+###section C############################################################
+####test the roadlength within 100m buffers effect on concentrations####
+#######################################################################
 
 major.length.coefs<-list()
 
@@ -206,12 +206,32 @@ for (i in 1:6){
 
 
 road_length<-rbind(major.length,minor.length,all.length)
+road_length$names<-factor(road_length$names, levels=c("major.road","minor.road","all.road"))
+
+#######code to plot length######################################### 
+
+pd <- position_dodge(width = 1)
+
+star.label<-data.frame(Group="AFLU2", Value=2.5)
+
+p1<-ggplot(road_length, aes(y=PC*10, x=names))+
+  geom_pointrange(aes(ymax=UPC*10, ymin=LPC*10, color=type), position = pd, size=0.8)+
+  geom_vline(xintercept = c(1.5,2.5,3.5,4.5, 5.5),linetype="dotted", size=1)+
+  geom_hline(yintercept = 0)+theme_classic()+
+  scale_color_manual(values=c("black","deepskyblue","coral"),labels = c("Major Roads","Minor Roads","All Roads"))+
+  labs(x="biomarker names", y="Percentage Change (%, 95%CI)")+
+  scale_x_discrete(labels=c("1-ANAP", "2-ANAP", "2-AFLU", "9-APHE", "1-APYR", "TAPAHs"))+
+  geom_text(x=2.67, y=7.75, label="*", size=5)+
+  theme(legend.title=element_blank(),legend.position="bottom",  
+        axis.text.x = element_text(size=14), axis.text.y = element_text(size=14),legend.text=element_text(size=14), 
+        axis.title.x=element_blank(), axis.title.y = element_text(size=16),legend.key.size=unit(4, "points"))
 
 ##############################################################################################
-####test the roadlength within 100m buffers effect on concentrations modified by sex##
+####test the roadlength within 100m buffers effect on concentrations modified by sex#########
+#########sex is represented by mean length of roads of different sex#########################
+#############################################################################################
 
-
-AA[which(AA[,10]==0),25]<-mean(AA[which(AA[,10]==0), 14])
+AA[which(AA[,10]==0),25]<-mean(AA[which(AA[,10]==0), 14]) ###calculate mean length of raods of each sex
 AA[which(AA[,10]==1),25]<-mean(AA[which(AA[,10]==1), 14])
 
 major.length.sex.coefs<-list() 
@@ -235,32 +255,12 @@ for (i in 1:6) {
        }
 
 
-ggplot()
 
 
-pd <- position_dodge(width = 1)
-
-star.label<-data.frame(Group="AFLU2", Value=2.5)
-
-p1<-ggplot(road_length, aes(y=PC*10, x=names))+
-       geom_pointrange(aes(ymax=UPC*10, ymin=LPC*10, color=type), position = pd, size=0.8)+
-       geom_vline(xintercept = c(1.5,2.5,3.5,4.5, 5.5),linetype="dotted", size=1)+
-       geom_hline(yintercept = 0)+theme_classic()+
-       scale_color_manual(values=c("black","deepskyblue","coral"),labels = c("Major Roads","Minor Roads","All Roads"))+
-       labs(x="biomarker names", y="Percentage Change (%, 95%CI)")+
-       scale_x_discrete(labels=c("1-ANAP", "2-ANAP", "2-AFLU", "9-APHE", "1-APYR", "TAPAHs"))+
-       geom_text(x=2.67, y=7.75, label="*", size=5)+
-       theme(legend.title=element_blank(),legend.position="bottom",  
-         axis.text.x = element_text(size=14), axis.text.y = element_text(size=14),legend.text=element_text(size=14), 
-         axis.title.x=element_blank(), axis.title.y = element_text(size=16),legend.key.size=unit(4, "points"))
-
-
-
-
-road_length$names<-factor(road_length$names, levels=c("major.road","minor.road","all.road"))
-
-
-
+###############################################################################
+#############base mixed effect models with random intercepts of subjects.###### 
+#####Fixed effects includes COPD, IHD, age, sex, and BMI. #####################
+###############################################################################
 base.coefs<-list()
  
    
@@ -294,7 +294,41 @@ for (i in 1:6) {
        base_IHD<-rbind(base_IHD, base.coefs[[i]][3,])
    }
 
+   
+###section C############################################################
+####test the no2 within 100m buffers effect on concentrations####
+#######################################################################
+base.no2.coefs<-list()
+    
+      
+for (i in 1:6) {
+         
+    lmerBAN=lmer(log10(AA[,i])~AA[,7]+AA[,8]+AA[,9]+AA[,10]+AA[,11]+AA[,24]+(1|AA[,12]))
+    base.no2.coefs[[i]]<-data.frame(coef(summary(lmerBAN)))# extract coefficients
+    base.no2.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(base.no2.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+    base.no2.coefs[[i]]$LCI=base.no2.coefs[[i]]$Estimate-1.96*base.no2.coefs[[i]]$Std..Error
+    base.no2.coefs[[i]]$UCI=base.no2.coefs[[i]]$Estimate+1.96*base.no2.coefs[[i]]$Std..Error
+      
+    base.no2.coefs[[i]]$FC=10^(base.no2.coefs[[i]]$Estimate)
+    base.no2.coefs[[i]]$LFC=10^(base.no2.coefs[[i]]$LCI)
+    base.no2.coefs[[i]]$UFC=10^(base.no2.coefs[[i]]$UCI)
+    base.no2.coefs[[i]]$PC=((10^(base.no2.coefs[[i]]$Estimate))-1)*100
+    base.no2.coefs[[i]]$LPC=((10^(base.no2.coefs[[i]]$LCI))-1)*100
+    base.no2.coefs[[i]]$UPC=((10^(base.no2.coefs[[i]]$UCI))-1)*100
+    base.no2.coefs[[i]]$names=bio_names[i]
+          }
+ 
+base.no2_COPD<-data.frame()
 
+for (i in 1:6){
+base.no2_COPD<-rbind(base.no2_COPD, base.no2.coefs[[i]][2,])
+       }
+
+base.no2_IHD<-data.frame()
+
+for (i in 1:6){
+base.no2_IHD<-rbind(bas.no2e_IHD, base.no2.coefs[[i]][3,])
+       }
 
 base.no2$PC.IQR<-IQR(AA$NO2)*base.no2$PC
 base.no2$LPC.IQR<-IQR(AA$NO2)*base.no2$LPC
