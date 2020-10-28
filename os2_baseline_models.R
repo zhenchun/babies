@@ -5,6 +5,7 @@ library(dlnm)
 library(lme4)
 library(lmerTest)
 require(ggplot2)
+library(scales)
 
 path<-"C:/Users/zy125/Box Sync/Postdoc/os2/data"
 
@@ -46,6 +47,10 @@ AA[1:238,18]=Baseline$Q3
 AA[1:238,19]=Baseline$Q4
 AA[1:238,20]=Baseline$Near100
 AA[1:238,21]=Baseline$Far100
+AA[1:238,22]=Baseline$Group
+AA[1:238,23]=Baseline$Gender
+AA[1:238,24]=Baseline$NO2_2013
+
 AA=na.omit(AA)
 colnames(AA)<-c("ANAP1_Cr", "ANAP2_Cr","AFLU2_Cr","APHE9_Cr", "APYR1_Cr","TAPAHs_Cr",
                 "COPD", "IHD","Age","Male", "BMI","id","all_roads_length_100m",
@@ -202,7 +207,32 @@ for (i in 1:6){
 
 road_length<-rbind(major.length,minor.length,all.length)
 
+##############################################################################################
+####test the roadlength within 100m buffers effect on concentrations modified by sex##
 
+
+AA[which(AA[,10]==0),25]<-mean(AA[which(AA[,10]==0), 14])
+AA[which(AA[,10]==1),25]<-mean(AA[which(AA[,10]==1), 14])
+
+major.length.sex.coefs<-list() 
+
+for (i in 1:6) {
+     
+       lmerCMAS=lmer(log10(AA[,i])~AA[,14]+AA[,7]+AA[,8]+AA[,9]+AA[,11]+AA[,25]+(1|AA[,12]))
+       major.length.sex.coefs[[i]]<-data.frame(coef(summary(lmerCMAS)))# extract coefficients
+       major.length.sex.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(major.length.sex.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+       major.length.sex.coefs[[i]]$LCI=major.length.sex.coefs[[i]]$Estimate-1.96*major.length.sex.coefs[[i]]$Std..Error
+       major.length.sex.coefs[[i]]$UCI=major.length.sex.coefs[[i]]$Estimate+1.96*major.length.sex.coefs[[i]]$Std..Error
+       
+         major.length.sex.coefs[[i]]$FC=10^(major.length.sex.coefs[[i]]$Estimate)
+         major.length.sex.coefs[[i]]$LFC=10^(major.length.sex.coefs[[i]]$LCI)
+         major.length.sex.coefs[[i]]$UFC=10^(major.length.sex.coefs[[i]]$UCI)
+         major.length.sex.coefs[[i]]$PC=((10^(major.length.sex.coefs[[i]]$Estimate))-1)*100
+         major.length.sex.coefs[[i]]$LPC=((10^(major.length.sex.coefs[[i]]$LCI))-1)*100
+         major.length.sex.coefs[[i]]$UPC=((10^(major.length.sex.coefs[[i]]$UCI))-1)*100
+         major.length.sex.coefs[[i]]$names=bio_names[i]
+         major.length.sex.coefs[[i]]$type="major.road"
+       }
 
 
 ggplot()
@@ -231,8 +261,51 @@ road_length$names<-factor(road_length$names, levels=c("major.road","minor.road",
 
 
 
+base.coefs<-list()
+ 
+   
+for (i in 1:6) {
+      
+        lmerBA=lmer(log10(AA[,i])~AA[,7]+AA[,8]+AA[,9]+AA[,10]+AA[,11]+(1|AA[,12]))
+        base.coefs[[i]]<-data.frame(coef(summary(lmerBA)))# extract coefficients
+        base.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(base.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+        base.coefs[[i]]$LCI=base.coefs[[i]]$Estimate-1.96*base.coefs[[i]]$Std..Error
+        base.coefs[[i]]$UCI=base.coefs[[i]]$Estimate+1.96*base.coefs[[i]]$Std..Error
+        
+           base.coefs[[i]]$FC=10^(base.coefs[[i]]$Estimate)
+           base.coefs[[i]]$LFC=10^(base.coefs[[i]]$LCI)
+           base.coefs[[i]]$UFC=10^(base.coefs[[i]]$UCI)
+           base.coefs[[i]]$PC=((10^(base.coefs[[i]]$Estimate))-1)*100
+           base.coefs[[i]]$LPC=((10^(base.coefs[[i]]$LCI))-1)*100
+           base.coefs[[i]]$UPC=((10^(base.coefs[[i]]$UCI))-1)*100
+           base.coefs[[i]]$names=bio_names[i]
+         }
+ 
+   base_COPD<-data.frame()
+ 
+   for (i in 1:6){
+       base_COPD<-rbind(base_COPD, base.coefs[[i]][2,])
+     }
+ 
+   
+   base_IHD<-data.frame()
+ 
+   for (i in 1:6){
+       base_IHD<-rbind(base_IHD, base.coefs[[i]][3,])
+   }
 
 
 
+base.no2$PC.IQR<-IQR(AA$NO2)*base.no2$PC
+base.no2$LPC.IQR<-IQR(AA$NO2)*base.no2$LPC
+base.no2$UPC.IQR<-IQR(AA$NO2)*base.no2$UPC
 
+ggplot(base.no2, aes(y=PC.IQR, x=names))+
+     geom_pointrange(aes(ymax=UPC.IQR, ymin=LPC.IQR), position = pd, size=0.8)+
+     geom_hline(yintercept = 0, linetype="dotted")+theme_classic()+
+     labs(x="biomarker names", y="Percentage Change (%, 95%CI)")+
+     scale_x_discrete(labels=c("1-ANAP", "2-ANAP", "2-AFLU", "9-APHE", "1-APYR", "TAPAHs"))+
+     scale_y_continuous(limits = c(-60, 140),breaks=seq(-60,140, by=20))+
+       theme(axis.text= element_text(size=14), 
+                         axis.title.x=element_blank(), axis.title.y = element_text(size=16))
 
