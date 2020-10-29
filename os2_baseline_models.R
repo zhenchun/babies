@@ -1,10 +1,8 @@
-
-
 #Packages
 library(dlnm)
 library(lme4)
 library(lmerTest)
-require(ggplot2)
+library(ggplot2)
 library(scales)
 
 path<-"C:/Users/zy125/Box Sync/Postdoc/os2/data"
@@ -83,10 +81,10 @@ for (i in 1:6) {
 
 names(dist.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
 
-
-###section B###############################################################
-####test the in or outside 100m of a major road effect on concentrations##
-############################################################################
+#############################################################################
+###section B#################################################################
+####test the in or outside 100m of a major road effect on concentrations#####
+#############################################################################
 M100.coefs<-list()
 
 
@@ -109,11 +107,13 @@ for (i in 1:6) {
 names(M100.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
 
 
-
+#######################################################################
 ###section C############################################################
 ####test the roadlength within 100m buffers effect on concentrations####
 #######################################################################
 
+
+####major roads
 major.length.coefs<-list()
 
 
@@ -141,6 +141,8 @@ for (i in 1:6){
   major.length<-rbind(major.length, major.length.coefs[[i]][2,])
 }
 
+
+####minor roads
 
 minor.length.coefs<-list()
 
@@ -171,6 +173,9 @@ minor.length<-data.frame()
 for (i in 1:6){
   minor.length<-rbind(minor.length, minor.length.coefs[[i]][2,])
 }
+
+
+####all roads
 
 
 all.length.coefs<-list()
@@ -205,14 +210,13 @@ for (i in 1:6){
 }
 
 
-road_length<-rbind(major.length,minor.length,all.length)
-road_length$names<-factor(road_length$names, levels=c("major.road","minor.road","all.road"))
+road_length<-rbind(major.length,minor.length,all.length)####combine different roads types
+road_length$type<-factor(road_length$type, levels=c("major.road","minor.road","all.road"))
+road_length$names<-factor(road_length$names, c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs"))
 
 #######code to plot length######################################### 
 
 pd <- position_dodge(width = 1)
-
-star.label<-data.frame(Group="AFLU2", Value=2.5)
 
 p1<-ggplot(road_length, aes(y=PC*10, x=names))+
   geom_pointrange(aes(ymax=UPC*10, ymin=LPC*10, color=type), position = pd, size=0.8)+
@@ -222,40 +226,97 @@ p1<-ggplot(road_length, aes(y=PC*10, x=names))+
   labs(x="biomarker names", y="Percentage Change (%, 95%CI)")+
   scale_x_discrete(labels=c("1-ANAP", "2-ANAP", "2-AFLU", "9-APHE", "1-APYR", "TAPAHs"))+
   geom_text(x=2.67, y=7.75, label="*", size=5)+
-  theme(legend.title=element_blank(),legend.position="bottom",  
-        axis.text.x = element_text(size=14), axis.text.y = element_text(size=14),legend.text=element_text(size=14), 
+  theme(legend.title=element_blank(),legend.position="bottom",axis.text.x = element_text(size=14), axis.text.y = element_text(size=14),legend.text=element_text(size=14), 
         axis.title.x=element_blank(), axis.title.y = element_text(size=16),legend.key.size=unit(4, "points"))
 
 ##############################################################################################
-####test the roadlength within 100m buffers effect on concentrations modified by sex#########
-#########sex is represented by mean length of roads of different sex#########################
-#############################################################################################
-
-AA[which(AA[,10]==0),25]<-mean(AA[which(AA[,10]==0), 14]) ###calculate mean length of raods of each sex
-AA[which(AA[,10]==1),25]<-mean(AA[which(AA[,10]==1), 14])
+####test the roadlength within 100m buffers effect on concentrations modified by sex##########
+##############################################################################################
+##############################################################################################
 
 major.length.sex.coefs<-list() 
 
 for (i in 1:6) {
      
-       lmerCMAS=lmer(log10(AA[,i])~AA[,14]+AA[,7]+AA[,8]+AA[,9]+AA[,11]+AA[,25]+(1|AA[,12]))
-       major.length.sex.coefs[[i]]<-data.frame(coef(summary(lmerCMAS)))# extract coefficients
-       major.length.sex.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(major.length.sex.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
-       major.length.sex.coefs[[i]]$LCI=major.length.sex.coefs[[i]]$Estimate-1.96*major.length.sex.coefs[[i]]$Std..Error
-       major.length.sex.coefs[[i]]$UCI=major.length.sex.coefs[[i]]$Estimate+1.96*major.length.sex.coefs[[i]]$Std..Error
+  lmerCMAS=lmer(log10(AA[,i])~AA[,14]+AA[,7]+AA[,8]+AA[,9]+AA[,11]+(AA[,14]*AA[,10])+(1|AA[,12]))
+  major.length.sex.coefs[[i]]<-data.frame(coef(summary(lmerCMAS)))# extract coefficients
+  major.length.sex.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(major.length.sex.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+  major.length.sex.coefs[[i]]$LCI=major.length.sex.coefs[[i]]$Estimate-1.96*major.length.sex.coefs[[i]]$Std..Error
+  major.length.sex.coefs[[i]]$UCI=major.length.sex.coefs[[i]]$Estimate+1.96*major.length.sex.coefs[[i]]$Std..Error
        
-         major.length.sex.coefs[[i]]$FC=10^(major.length.sex.coefs[[i]]$Estimate)
-         major.length.sex.coefs[[i]]$LFC=10^(major.length.sex.coefs[[i]]$LCI)
-         major.length.sex.coefs[[i]]$UFC=10^(major.length.sex.coefs[[i]]$UCI)
-         major.length.sex.coefs[[i]]$PC=((10^(major.length.sex.coefs[[i]]$Estimate))-1)*100
-         major.length.sex.coefs[[i]]$LPC=((10^(major.length.sex.coefs[[i]]$LCI))-1)*100
-         major.length.sex.coefs[[i]]$UPC=((10^(major.length.sex.coefs[[i]]$UCI))-1)*100
-         major.length.sex.coefs[[i]]$names=bio_names[i]
-         major.length.sex.coefs[[i]]$type="major.road"
-       }
+  major.length.sex.coefs[[i]]$FC=10^(major.length.sex.coefs[[i]]$Estimate)
+  major.length.sex.coefs[[i]]$LFC=10^(major.length.sex.coefs[[i]]$LCI)
+  major.length.sex.coefs[[i]]$UFC=10^(major.length.sex.coefs[[i]]$UCI)
+  major.length.sex.coefs[[i]]$PC=((10^(major.length.sex.coefs[[i]]$Estimate))-1)*100
+  major.length.sex.coefs[[i]]$LPC=((10^(major.length.sex.coefs[[i]]$LCI))-1)*100
+  major.length.sex.coefs[[i]]$UPC=((10^(major.length.sex.coefs[[i]]$UCI))-1)*100
+  major.length.sex.coefs[[i]]$names=bio_names[i]
+  major.length.sex.coefs[[i]]$type="major.road"
+              
+  }
+
+major.length.sex<-data.frame()
+
+for (i in 1:6){
+  major.length.sex<-rbind(major.length.sex, major.length.sex.coefs[[i]][8,])
+}
 
 
+minor.length.sex.coefs<-list() 
 
+for (i in 1:6) {
+  
+  lmerCMIS=lmer(log10(AA[,i])~AA[,15]+AA[,7]+AA[,8]+AA[,9]+AA[,11]+AA[,15]*AA[,10]+(1|AA[,12]))
+  minor.length.sex.coefs[[i]]<-data.frame(coef(summary(lmerCMIS)))# extract coefficients
+  minor.length.sex.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(minor.length.sex.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+  minor.length.sex.coefs[[i]]$LCI=minor.length.sex.coefs[[i]]$Estimate-1.96*minor.length.sex.coefs[[i]]$Std..Error
+  minor.length.sex.coefs[[i]]$UCI=minor.length.sex.coefs[[i]]$Estimate+1.96*minor.length.sex.coefs[[i]]$Std..Error
+  
+  minor.length.sex.coefs[[i]]$FC=10^(minor.length.sex.coefs[[i]]$Estimate)
+  minor.length.sex.coefs[[i]]$LFC=10^(minor.length.sex.coefs[[i]]$LCI)
+  minor.length.sex.coefs[[i]]$UFC=10^(minor.length.sex.coefs[[i]]$UCI)
+  minor.length.sex.coefs[[i]]$PC=((10^(minor.length.sex.coefs[[i]]$Estimate))-1)*100
+  minor.length.sex.coefs[[i]]$LPC=((10^(minor.length.sex.coefs[[i]]$LCI))-1)*100
+  minor.length.sex.coefs[[i]]$UPC=((10^(minor.length.sex.coefs[[i]]$UCI))-1)*100
+  minor.length.sex.coefs[[i]]$names=bio_names[i]
+  minor.length.sex.coefs[[i]]$type="minor.road"
+  
+  }
+
+
+minor.length.sex<-data.frame()
+
+for (i in 1:6){
+  minor.length.sex<-rbind(minor.length.sex, minor.length.sex.coefs[[i]][8,])
+}
+
+
+all.length.sex.coefs<-list() 
+
+for (i in 1:6) {
+  
+  lmerCAS=lmer(log10(AA[,i])~AA[,13]+AA[,7]+AA[,8]+AA[,9]+AA[,11]+(AA[,13]*AA[,10])+(1|AA[,12]))
+  all.length.sex.coefs[[i]]<-data.frame(coef(summary(lmerCAS)))# extract coefficients
+  all.length.sex.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(all.length.sex.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+  all.length.sex.coefs[[i]]$LCI=all.length.sex.coefs[[i]]$Estimate-1.96*all.length.sex.coefs[[i]]$Std..Error
+  all.length.sex.coefs[[i]]$UCI=all.length.sex.coefs[[i]]$Estimate+1.96*all.length.sex.coefs[[i]]$Std..Error
+  
+  all.length.sex.coefs[[i]]$FC=10^(all.length.sex.coefs[[i]]$Estimate)
+  all.length.sex.coefs[[i]]$LFC=10^(all.length.sex.coefs[[i]]$LCI)
+  all.length.sex.coefs[[i]]$UFC=10^(all.length.sex.coefs[[i]]$UCI)
+  all.length.sex.coefs[[i]]$PC=((10^(all.length.sex.coefs[[i]]$Estimate))-1)*100
+  all.length.sex.coefs[[i]]$LPC=((10^(all.length.sex.coefs[[i]]$LCI))-1)*100
+  all.length.sex.coefs[[i]]$UPC=((10^(all.length.sex.coefs[[i]]$UCI))-1)*100
+  all.length.sex.coefs[[i]]$names=bio_names[i]
+  all.length.sex.coefs[[i]]$type="all.road"
+}
+
+
+all.length.sex<-data.frame()
+
+for (i in 1:6){
+  all.length.sex<-rbind(all.length.sex, all.length.sex.coefs[[i]][8,])
+}
 
 ###############################################################################
 #############base mixed effect models with random intercepts of subjects.###### 
@@ -266,31 +327,38 @@ base.coefs<-list()
    
 for (i in 1:6) {
       
-        lmerBA=lmer(log10(AA[,i])~AA[,7]+AA[,8]+AA[,9]+AA[,10]+AA[,11]+(1|AA[,12]))
-        base.coefs[[i]]<-data.frame(coef(summary(lmerBA)))# extract coefficients
-        base.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(base.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
-        base.coefs[[i]]$LCI=base.coefs[[i]]$Estimate-1.96*base.coefs[[i]]$Std..Error
-        base.coefs[[i]]$UCI=base.coefs[[i]]$Estimate+1.96*base.coefs[[i]]$Std..Error
+  lmerBA=lmer(log10(AA[,i])~AA[,7]+AA[,8]+AA[,9]+AA[,10]+AA[,11]+(1|AA[,12]))
+  base.coefs[[i]]<-data.frame(coef(summary(lmerBA)))# extract coefficients
+  base.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(base.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+  base.coefs[[i]]$LCI=base.coefs[[i]]$Estimate-1.96*base.coefs[[i]]$Std..Error
+  base.coefs[[i]]$UCI=base.coefs[[i]]$Estimate+1.96*base.coefs[[i]]$Std..Error
         
-           base.coefs[[i]]$FC=10^(base.coefs[[i]]$Estimate)
-           base.coefs[[i]]$LFC=10^(base.coefs[[i]]$LCI)
-           base.coefs[[i]]$UFC=10^(base.coefs[[i]]$UCI)
-           base.coefs[[i]]$PC=((10^(base.coefs[[i]]$Estimate))-1)*100
-           base.coefs[[i]]$LPC=((10^(base.coefs[[i]]$LCI))-1)*100
-           base.coefs[[i]]$UPC=((10^(base.coefs[[i]]$UCI))-1)*100
-           base.coefs[[i]]$names=bio_names[i]
-         }
+  base.coefs[[i]]$FC=10^(base.coefs[[i]]$Estimate)
+  base.coefs[[i]]$LFC=10^(base.coefs[[i]]$LCI)
+  base.coefs[[i]]$UFC=10^(base.coefs[[i]]$UCI)
+  base.coefs[[i]]$PC=((10^(base.coefs[[i]]$Estimate))-1)*100
+  base.coefs[[i]]$LPC=((10^(base.coefs[[i]]$LCI))-1)*100
+  base.coefs[[i]]$UPC=((10^(base.coefs[[i]]$UCI))-1)*100
+  base.coefs[[i]]$names=bio_names[i]
+         
+}
+
+
+base<-data.frame()
+
+for (i in 1:6){
+  base<-rbind(base, base.coefs[[i]][8,])
+}
  
-   base_COPD<-data.frame()
+base_COPD<-data.frame()
  
-   for (i in 1:6){
+for (i in 1:6){
        base_COPD<-rbind(base_COPD, base.coefs[[i]][2,])
      }
  
-   
-   base_IHD<-data.frame()
+base_IHD<-data.frame()
  
-   for (i in 1:6){
+for (i in 1:6){
        base_IHD<-rbind(base_IHD, base.coefs[[i]][3,])
    }
 
@@ -303,20 +371,30 @@ base.no2.coefs<-list()
       
 for (i in 1:6) {
          
-    lmerBAN=lmer(log10(AA[,i])~AA[,7]+AA[,8]+AA[,9]+AA[,10]+AA[,11]+AA[,24]+(1|AA[,12]))
-    base.no2.coefs[[i]]<-data.frame(coef(summary(lmerBAN)))# extract coefficients
-    base.no2.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(base.no2.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
-    base.no2.coefs[[i]]$LCI=base.no2.coefs[[i]]$Estimate-1.96*base.no2.coefs[[i]]$Std..Error
-    base.no2.coefs[[i]]$UCI=base.no2.coefs[[i]]$Estimate+1.96*base.no2.coefs[[i]]$Std..Error
+  lmerBAN=lmer(log10(AA[,i])~AA[,7]+AA[,8]+AA[,9]+AA[,10]+AA[,11]+AA[,24]+(1|AA[,12]))
+  base.no2.coefs[[i]]<-data.frame(coef(summary(lmerBAN)))# extract coefficients
+  base.no2.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(base.no2.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+  base.no2.coefs[[i]]$LCI=base.no2.coefs[[i]]$Estimate-1.96*base.no2.coefs[[i]]$Std..Error
+  base.no2.coefs[[i]]$UCI=base.no2.coefs[[i]]$Estimate+1.96*base.no2.coefs[[i]]$Std..Error
       
-    base.no2.coefs[[i]]$FC=10^(base.no2.coefs[[i]]$Estimate)
-    base.no2.coefs[[i]]$LFC=10^(base.no2.coefs[[i]]$LCI)
-    base.no2.coefs[[i]]$UFC=10^(base.no2.coefs[[i]]$UCI)
-    base.no2.coefs[[i]]$PC=((10^(base.no2.coefs[[i]]$Estimate))-1)*100
-    base.no2.coefs[[i]]$LPC=((10^(base.no2.coefs[[i]]$LCI))-1)*100
-    base.no2.coefs[[i]]$UPC=((10^(base.no2.coefs[[i]]$UCI))-1)*100
-    base.no2.coefs[[i]]$names=bio_names[i]
-          }
+  base.no2.coefs[[i]]$FC=10^(base.no2.coefs[[i]]$Estimate)
+  base.no2.coefs[[i]]$LFC=10^(base.no2.coefs[[i]]$LCI)
+  base.no2.coefs[[i]]$UFC=10^(base.no2.coefs[[i]]$UCI)
+  base.no2.coefs[[i]]$PC=((10^(base.no2.coefs[[i]]$Estimate))-1)*100
+  base.no2.coefs[[i]]$LPC=((10^(base.no2.coefs[[i]]$LCI))-1)*100
+  base.no2.coefs[[i]]$UPC=((10^(base.no2.coefs[[i]]$UCI))-1)*100
+  base.no2.coefs[[i]]$names=bio_names[i]
+          
+}
+
+
+base.no2<-data.frame()
+
+for (i in 1:6){
+  base.no2<-rbind(base.no2, base.no2.coefs[[i]][7,])
+}
+
+
  
 base.no2_COPD<-data.frame()
 
@@ -327,14 +405,14 @@ base.no2_COPD<-rbind(base.no2_COPD, base.no2.coefs[[i]][2,])
 base.no2_IHD<-data.frame()
 
 for (i in 1:6){
-base.no2_IHD<-rbind(bas.no2e_IHD, base.no2.coefs[[i]][3,])
+base.no2_IHD<-rbind(base.no2_IHD, base.no2.coefs[[i]][3,])
        }
 
-base.no2$PC.IQR<-IQR(AA$NO2)*base.no2$PC
-base.no2$LPC.IQR<-IQR(AA$NO2)*base.no2$LPC
-base.no2$UPC.IQR<-IQR(AA$NO2)*base.no2$UPC
+  base.no2$PC.IQR<-IQR(AA$NO2)*base.no2$PC
+  base.no2$LPC.IQR<-IQR(AA$NO2)*base.no2$LPC
+  base.no2$UPC.IQR<-IQR(AA$NO2)*base.no2$UPC
 
-ggplot(base.no2, aes(y=PC.IQR, x=names))+
+p2<- ggplot(base.no2, aes(y=PC.IQR, x=names))+
      geom_pointrange(aes(ymax=UPC.IQR, ymin=LPC.IQR), position = pd, size=0.8)+
      geom_hline(yintercept = 0, linetype="dotted")+theme_classic()+
      labs(x="biomarker names", y="Percentage Change (%, 95%CI)")+
