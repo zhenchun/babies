@@ -55,7 +55,7 @@ AA=na.omit(AA)
 colnames(AA)<-c("ANAP1_Cr", "ANAP2_Cr","AFLU2_Cr","APHE9_Cr", "APYR1_Cr","TAPAHs_Cr",
                 "COPD", "IHD","Age","Male", "BMI","id","all_roads_length_100m",
                 "major_roads_length_100m","minor_roads_length_100m","Q1", "Q2","Q3","Q4", 
-                "Near100","Far100")
+                "Near100","Far100", "Group", "Gender", "NO2_2013")
 
 bio_names<- c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
 
