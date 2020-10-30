@@ -4,6 +4,8 @@ library(lme4)
 library(lmerTest)
 library(ggplot2)
 library(scales)
+library(gridExtra)
+library(grid)
 
 path<-"C:/Users/zy125/Box Sync/Postdoc/os2/data"
 
@@ -420,4 +422,66 @@ p2<- ggplot(base.no2, aes(y=PC.IQR, x=names))+
      scale_y_continuous(limits = c(-60, 140),breaks=seq(-60,140, by=20))+
        theme(axis.text= element_text(size=14), 
                          axis.title.x=element_blank(), axis.title.y = element_text(size=16))
+
+
+
+AA$Group<-factor(AA$Group, c("HEALTHY","COPD","IHD"))
+
+par(mfrow=c(3,2))
+ p3<-ggplot(AA, aes(x=Group, y=ANAP1_Cr, fill=Group))+geom_boxplot()+
+   scale_y_log10(breaks=c(0.001, 0.01,0.1,1,10,100,1000),labels=c(0.001, 0.01,0.1,1,10,100,1000),limits=c(0.001,1000))+ 
+   theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
+                    axis.title.y=element_blank(),legend.position="none")+ggtitle("A.1-ANAP")
+
+  p4<-ggplot(AA, aes(x=Group, y=ANAP2_Cr, fill=Group))+geom_boxplot()+
+    scale_y_log10(breaks=c(0.001, 0.01,0.1,1,10,100,1000),labels=c(0.001, 0.01,0.1,1,10,100,1000),limits=c(0.001,1000))+
+    theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
+                     axis.title.y=element_blank(),legend.position="none")+ggtitle("B.2-ANAP")
+  
+  
+  p5<-ggplot(AA, aes(x=Group, y=AFLU2_Cr, fill=Group))+geom_boxplot()+
+    scale_y_log10(breaks=c(0.001, 0.01,0.1,1,10,100,1000),labels=c(0.001, 0.01,0.1,1,10,100,1000),limits=c(0.001,1000))+ 
+    theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
+                     axis.title.y=element_blank(),legend.position="none")+ggtitle("C.2-AFLU")
+  
+  
+  p6<-ggplot(AA, aes(x=Group, y=APHE9_Cr, fill=Group))+geom_boxplot()+
+    scale_y_log10(breaks=c(0.001, 0.01,0.1,1,10,100,1000),labels=c(0.001, 0.01,0.1,1,10,100,1000),limits=c(0.001,1000))+
+    theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
+                     axis.title.y=element_blank(),legend.position="none")+ggtitle("D.9-APHE")
+  
+  
+  p7<-ggplot(AA, aes(x=Group, y=APYR1_Cr, fill=Group))+geom_boxplot()+
+    scale_y_log10(breaks=c(0.001, 0.01,0.1,1,10,100,1000),labels=c(0.001, 0.01,0.1,1,10,100,1000),limits=c(0.001,1000))+
+    theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
+                     axis.title.y=element_blank(),legend.position="none")+ggtitle("E.1-APYR")
+  
+  
+  p8<-ggplot(AA, aes(x=Group, y=TAPAHs_Cr, fill=Group))+geom_boxplot()+
+    scale_y_log10(breaks=c(0.01,0.1,1,10,100,1000,10000),labels=c(0.01,0.1,1,10,100,1000, 10000),limits=c(0.01,10000))+
+    theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
+                     axis.title.y=element_blank(),legend.position="none")+ggtitle("F.\u03A3TAPAHs")
+  
+  
+  p9<-ggplot(AA, aes(x=Group, y=TAPAHs_Cr, fill=Group))+geom_boxplot()+
+    scale_y_log10(breaks=c(0.01,0.1,1,10,100,1000,10000),labels=c(0.01,0.1,1,10,100,1000, 10000),limits=c(0.01,10000))+
+    theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
+                     axis.title.y=element_blank(), legend.position = "bottom")+ggtitle("F.\u03A3TAPAHs")
+  
+  #p9 is only used for extract legend
+  
+  
+  ###function to extract the legend
+  extract_legend <- function(my_ggp) {
+        step1 <- ggplot_gtable(ggplot_build(my_ggp))
+        step2 <- which(sapply(step1$grobs, function(x) x$name) == "guide-box")
+        step3 <- step1$grobs[[step2]]
+        return(step3)
+   }
+  
+  grid.arrange(arrangeGrob(p3, p4,p5, p6, p7, p8,nrow=2, 
+      left=textGrob("Urinary concentrations (\u03BCg/g creatinine)", 
+                    gp = gpar(fontsize = 12, fontface = 'bold'),rot = 90, vjust = 1)), shared_legend,heights = c(10, 1))
+  
+  
 
