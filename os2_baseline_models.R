@@ -432,13 +432,30 @@ par(mfrow=c(3,2))
    scale_y_log10(breaks=c(0.001, 0.01,0.1,1,10,100,1000),labels=c(0.001, 0.01,0.1,1,10,100,1000),limits=c(0.001,1000))+ 
    theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
                     axis.title.y=element_blank(),legend.position="none")+ggtitle("A.1-ANAP")+
-   stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)
-
+   stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)+
+   annotate("rect", xmin = 1, xmax = 2, ymin = 110, ymax =110, alpha=1,colour = "black")+
+   annotate("rect", xmin = 1, xmax = 1, ymin = 70, ymax =110, alpha=1,colour = "black")+
+   annotate("rect", xmin = 2, xmax = 2, ymin = 70, ymax =110, alpha=1,colour = "black")+
+   geom_text(aes(x=1.5, y=150, label="*", size=8))+
+   annotate("rect", xmin = 1, xmax = 3, ymin = 350, ymax =350, alpha=1,colour = "black")+
+   annotate("rect", xmin = 1, xmax = 1, ymin = 200, ymax =350, alpha=1,colour = "black")+
+   annotate("rect", xmin = 3, xmax = 3, ymin = 200, ymax =350, alpha=1,colour = "black")+
+   geom_text(aes(x=2, y=400, label="***", size=8))
+ 
+ 
   p4<-ggplot(AA, aes(x=Group, y=ANAP2_Cr, fill=Group))+geom_boxplot()+
     scale_y_log10(breaks=c(0.001, 0.01,0.1,1,10,100,1000),labels=c(0.001, 0.01,0.1,1,10,100,1000),limits=c(0.001,1000))+
     theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
                      axis.title.y=element_blank(),legend.position="none")+ggtitle("B.2-ANAP")+
-    stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)
+    stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)+
+    annotate("rect", xmin = 1, xmax = 2, ymin = 200, ymax =200, alpha=1,colour = "black")+
+    annotate("rect", xmin = 1, xmax = 1, ymin=150 , ymax =200, alpha=1,colour = "black")+
+    annotate("rect", xmin = 2, xmax = 2, ymin = 150, ymax =200, alpha=1,colour = "black")+
+    geom_text(aes(x=1.5, y=250, label="*", size=8))+
+    annotate("rect", xmin = 1, xmax = 3, ymin = 550, ymax =550, alpha=1,colour = "black")+
+    annotate("rect", xmin = 1, xmax = 1, ymin = 400, ymax =550, alpha=1,colour = "black")+
+    annotate("rect", xmin = 3, xmax = 3, ymin = 400, ymax =550, alpha=1,colour = "black")+
+    geom_text(aes(x=2, y=600, label="***", size=8))
   
   
   p5<-ggplot(AA, aes(x=Group, y=AFLU2_Cr, fill=Group))+geom_boxplot()+
@@ -449,24 +466,40 @@ par(mfrow=c(3,2))
   
   
   p6<-ggplot(AA, aes(x=Group, y=APHE9_Cr, fill=Group))+geom_boxplot()+
-    scale_y_log10(breaks=c(0.001, 0.01,0.1,1,10,100,1000),labels=c(0.001, 0.01,0.1,1,10,100,1000),limits=c(0.001,1000))+
+    scale_y_log10(breaks=c(0.001, 0.01,0.1,1,10,100,1000,10000),labels=c(0.001, 0.01,0.1,1,10,100,1000,10000),limits=c(0.001,10000))+
     theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
                      axis.title.y=element_blank(),legend.position="none")+ggtitle("D.9-APHE")+
-    stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)
+    stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)+
+    annotate("rect", xmin = 1, xmax = 2, ymin = 1000, ymax =1000, alpha=1,colour = "black")+
+    annotate("rect", xmin = 1, xmax = 1, ymin = 700, ymax =1000, alpha=1,colour = "black")+
+    annotate("rect", xmin = 2, xmax = 2, ymin = 700, ymax =1000, alpha=1,colour = "black")+
+    geom_text(aes(x=1.5, y=1100, label="*", size=8))
+  
   
   
   p7<-ggplot(AA, aes(x=Group, y=APYR1_Cr, fill=Group))+geom_boxplot()+
-    scale_y_log10(breaks=c(0.001, 0.01,0.1,1,10,100,1000),labels=c(0.001, 0.01,0.1,1,10,100,1000),limits=c(0.001,1000))+
+    scale_y_log10(breaks=c(0.001, 0.01,0.1,1,10,100),labels=c(0.001, 0.01,0.1,1,10,100),limits=c(0.001,100))+
     theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
                      axis.title.y=element_blank(),legend.position="none")+ggtitle("E.1-APYR")+
-    stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)
-  
+    stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)+
+    annotate("rect", xmin = 1, xmax = 3, ymin = 10, ymax =10, alpha=1,colour = "black")+
+    annotate("rect", xmin = 1, xmax = 1, ymin = 7, ymax =10, alpha=1,colour = "black")+
+    annotate("rect", xmin = 3, xmax = 3, ymin = 7, ymax =10, alpha=1,colour = "black")+
+    geom_text(aes(x=2, y=13, label="***", size=8))
   
   p8<-ggplot(AA, aes(x=Group, y=TAPAHs_Cr, fill=Group))+geom_boxplot()+
     scale_y_log10(breaks=c(0.01,0.1,1,10,100,1000,10000),labels=c(0.01,0.1,1,10,100,1000, 10000),limits=c(0.01,10000))+
     theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
                      axis.title.y=element_blank(),legend.position="none")+ggtitle("F.\u03A3TAPAHs")+
-    stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)
+    stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)+
+    annotate("rect", xmin = 1, xmax = 2, ymin = 1000, ymax =1000, alpha=1,colour = "black")+
+    annotate("rect", xmin = 1, xmax = 1, ymin = 700, ymax =1000, alpha=1,colour = "black")+
+    annotate("rect", xmin = 2, xmax = 2, ymin = 700, ymax =1000, alpha=1,colour = "black")+
+    geom_text(aes(x=1.5, y=1100, label="**", size=8))+
+    annotate("rect", xmin = 1, xmax = 3, ymin = 3500, ymax =3500, alpha=1,colour = "black")+
+    annotate("rect", xmin = 1, xmax = 1, ymin = 2000, ymax =3500, alpha=1,colour = "black")+
+    annotate("rect", xmin = 3, xmax = 3, ymin = 2000, ymax =3500, alpha=1,colour = "black")+
+    geom_text(aes(x=2, y=4000, label="***", size=8))
   
   
   p9<-ggplot(AA, aes(x=Group, y=TAPAHs_Cr, fill=Group))+geom_boxplot()+
