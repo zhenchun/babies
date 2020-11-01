@@ -431,42 +431,54 @@ par(mfrow=c(3,2))
  p3<-ggplot(AA, aes(x=Group, y=ANAP1_Cr, fill=Group))+geom_boxplot()+
    scale_y_log10(breaks=c(0.001, 0.01,0.1,1,10,100,1000),labels=c(0.001, 0.01,0.1,1,10,100,1000),limits=c(0.001,1000))+ 
    theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
-                    axis.title.y=element_blank(),legend.position="none")+ggtitle("A.1-ANAP")
+                    axis.title.y=element_blank(),legend.position="none")+ggtitle("A.1-ANAP")+
+   stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)
 
   p4<-ggplot(AA, aes(x=Group, y=ANAP2_Cr, fill=Group))+geom_boxplot()+
     scale_y_log10(breaks=c(0.001, 0.01,0.1,1,10,100,1000),labels=c(0.001, 0.01,0.1,1,10,100,1000),limits=c(0.001,1000))+
     theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
-                     axis.title.y=element_blank(),legend.position="none")+ggtitle("B.2-ANAP")
+                     axis.title.y=element_blank(),legend.position="none")+ggtitle("B.2-ANAP")+
+    stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)
   
   
   p5<-ggplot(AA, aes(x=Group, y=AFLU2_Cr, fill=Group))+geom_boxplot()+
     scale_y_log10(breaks=c(0.001, 0.01,0.1,1,10,100,1000),labels=c(0.001, 0.01,0.1,1,10,100,1000),limits=c(0.001,1000))+ 
     theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
-                     axis.title.y=element_blank(),legend.position="none")+ggtitle("C.2-AFLU")
+                     axis.title.y=element_blank(),legend.position="none")+ggtitle("C.2-AFLU")+
+    stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)
   
   
   p6<-ggplot(AA, aes(x=Group, y=APHE9_Cr, fill=Group))+geom_boxplot()+
     scale_y_log10(breaks=c(0.001, 0.01,0.1,1,10,100,1000),labels=c(0.001, 0.01,0.1,1,10,100,1000),limits=c(0.001,1000))+
     theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
-                     axis.title.y=element_blank(),legend.position="none")+ggtitle("D.9-APHE")
+                     axis.title.y=element_blank(),legend.position="none")+ggtitle("D.9-APHE")+
+    stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)
   
   
   p7<-ggplot(AA, aes(x=Group, y=APYR1_Cr, fill=Group))+geom_boxplot()+
     scale_y_log10(breaks=c(0.001, 0.01,0.1,1,10,100,1000),labels=c(0.001, 0.01,0.1,1,10,100,1000),limits=c(0.001,1000))+
     theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
-                     axis.title.y=element_blank(),legend.position="none")+ggtitle("E.1-APYR")
+                     axis.title.y=element_blank(),legend.position="none")+ggtitle("E.1-APYR")+
+    stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)
   
   
   p8<-ggplot(AA, aes(x=Group, y=TAPAHs_Cr, fill=Group))+geom_boxplot()+
     scale_y_log10(breaks=c(0.01,0.1,1,10,100,1000,10000),labels=c(0.01,0.1,1,10,100,1000, 10000),limits=c(0.01,10000))+
     theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
-                     axis.title.y=element_blank(),legend.position="none")+ggtitle("F.\u03A3TAPAHs")
+                     axis.title.y=element_blank(),legend.position="none")+ggtitle("F.\u03A3TAPAHs")+
+    stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)
   
   
   p9<-ggplot(AA, aes(x=Group, y=TAPAHs_Cr, fill=Group))+geom_boxplot()+
     scale_y_log10(breaks=c(0.01,0.1,1,10,100,1000,10000),labels=c(0.01,0.1,1,10,100,1000, 10000),limits=c(0.01,10000))+
     theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
-                     axis.title.y=element_blank(), legend.position = "bottom")+ggtitle("F.\u03A3TAPAHs")
+                     axis.title.y=element_blank(), legend.position = "bottom")+ggtitle("F.\u03A3TAPAHs")+
+    stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)+
+    annotate("rect", xmin = 1, xmax = 2, ymin = 1500, ymax =1500, alpha=1,colour = "black")+
+    annotate("rect", xmin = 1, xmax = 1, ymin = 1000, ymax =1500, alpha=1,colour = "black")+
+    annotate("rect", xmin = 2, xmax = 2, ymin = 1000, ymax =1500, alpha=1,colour = "black")+
+    geom_text(aes(x=1.5, y=1900, label="*", size=8))
+    
   
   #p9 is only used for extract legend
   
