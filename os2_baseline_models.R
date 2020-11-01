@@ -83,6 +83,10 @@ for (i in 1:6) {
 
 names(dist.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
 
+for (i in 1:6){
+  write.csv(dist.coefs[[i]], paste0("ModelA_", bio_names[i],".csv"))
+}
+
 #############################################################################
 ###section B#################################################################
 ####test the in or outside 100m of a major road effect on concentrations#####
@@ -108,6 +112,9 @@ for (i in 1:6) {
 
 names(M100.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
 
+for (i in 1:6){
+  write.csv(M100.coefs[[i]], paste0("ModelB_", bio_names[i],".csv"))
+}
 
 #######################################################################
 ###section C############################################################
@@ -216,6 +223,8 @@ road_length<-rbind(major.length,minor.length,all.length)####combine different ro
 road_length$type<-factor(road_length$type, levels=c("major.road","minor.road","all.road"))
 road_length$names<-factor(road_length$names, c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs"))
 
+write.csv(road_length, "road_length.csv")
+
 #######code to plot length######################################### 
 
 pd <- position_dodge(width = 1)
@@ -320,6 +329,14 @@ for (i in 1:6){
   all.length.sex<-rbind(all.length.sex, all.length.sex.coefs[[i]][8,])
 }
 
+
+road_length_sex<-rbind(major.length.sex,minor.length.sex,all.length.sex)####combine different roads types
+road_length_sex$type<-factor(road_length_sex$type, levels=c("major.road","minor.road","all.road"))
+road_length_sex$names<-factor(road_length_sex$names, c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs"))
+
+write.csv(road_length_sex, "road_length_sex.csv")
+
+
 ###############################################################################
 #############base mixed effect models with random intercepts of subjects.###### 
 #####Fixed effects includes COPD, IHD, age, sex, and BMI. #####################
@@ -396,7 +413,13 @@ for (i in 1:6){
   base.no2<-rbind(base.no2, base.no2.coefs[[i]][7,])
 }
 
+base.no2$PC.IQR<-IQR(AA$NO2)*base.no2$PC
+base.no2$LPC.IQR<-IQR(AA$NO2)*base.no2$LPC
+base.no2$UPC.IQR<-IQR(AA$NO2)*base.no2$UPC
 
+base.no2$names<-factor(base.no2$names, c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs"))
+
+write.csv(base.no2, "base.no2.csv")
  
 base.no2_COPD<-data.frame()
 
@@ -410,9 +433,9 @@ for (i in 1:6){
 base.no2_IHD<-rbind(base.no2_IHD, base.no2.coefs[[i]][3,])
        }
 
-  base.no2$PC.IQR<-IQR(AA$NO2)*base.no2$PC
-  base.no2$LPC.IQR<-IQR(AA$NO2)*base.no2$LPC
-  base.no2$UPC.IQR<-IQR(AA$NO2)*base.no2$UPC
+write.csv(base.no2_COPD, "base.no2_COPD.csv") 
+
+write.csv(base.no2_IHD, "base.no2_IHD.csv") 
 
 p2<- ggplot(base.no2, aes(y=PC.IQR, x=names))+
      geom_pointrange(aes(ymax=UPC.IQR, ymin=LPC.IQR), position = pd, size=0.8)+
@@ -427,7 +450,6 @@ p2<- ggplot(base.no2, aes(y=PC.IQR, x=names))+
 
 AA$Group<-factor(AA$Group, c("HEALTHY","COPD","IHD"))
 
-par(mfrow=c(3,2))
  p3<-ggplot(AA, aes(x=Group, y=ANAP1_Cr, fill=Group))+geom_boxplot()+
    scale_y_log10(breaks=c(0.001, 0.01,0.1,1,10,100,1000),labels=c(0.001, 0.01,0.1,1,10,100,1000),limits=c(0.001,1000))+ 
    theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
@@ -505,12 +527,7 @@ par(mfrow=c(3,2))
   p9<-ggplot(AA, aes(x=Group, y=TAPAHs_Cr, fill=Group))+geom_boxplot()+
     scale_y_log10(breaks=c(0.01,0.1,1,10,100,1000,10000),labels=c(0.01,0.1,1,10,100,1000, 10000),limits=c(0.01,10000))+
     theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
-                     axis.title.y=element_blank(), legend.position = "bottom")+ggtitle("F.\u03A3TAPAHs")+
-    stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)+
-    annotate("rect", xmin = 1, xmax = 2, ymin = 1500, ymax =1500, alpha=1,colour = "black")+
-    annotate("rect", xmin = 1, xmax = 1, ymin = 1000, ymax =1500, alpha=1,colour = "black")+
-    annotate("rect", xmin = 2, xmax = 2, ymin = 1000, ymax =1500, alpha=1,colour = "black")+
-    geom_text(aes(x=1.5, y=1900, label="*", size=8))
+                     axis.title.y=element_blank(), legend.position = "bottom")+ggtitle("F.\u03A3TAPAHs")
     
   
   #p9 is only used for extract legend
@@ -523,6 +540,7 @@ par(mfrow=c(3,2))
         step3 <- step1$grobs[[step2]]
         return(step3)
    }
+  shared_legend <- extract_legend(p9)
   
   grid.arrange(arrangeGrob(p3, p4,p5, p6, p7, p8,nrow=2, 
       left=textGrob("Urinary concentrations (\u03BCg/g creatinine)", 
