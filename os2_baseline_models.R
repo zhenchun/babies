@@ -546,5 +546,67 @@ AA$Group<-factor(AA$Group, c("HEALTHY","COPD","IHD"))
       left=textGrob("Urinary concentrations (\u03BCg/g creatinine)", 
                     gp = gpar(fontsize = 12, fontface = 'bold'),rot = 90, vjust = 1)), shared_legend,heights = c(10, 1))
   
+
+  
+  
+##################################################################################################################################
+#################################models adjusted by external exposure of distance to road(divided by 100m) and NO2################ 
+##################################################################################################################################  
+    
+base.no2.100.coefs<-list()
+  
+  
+for (i in 1:6) {
+    
+    lmerBAN=lmer(log10(AA[,i])~AA[,7]+AA[,8]+AA[,9]+AA[,10]+AA[,11]+AA[,20]+AA[,24]+(1|AA[,12]))
+    base.no2.100.coefs[[i]]<-data.frame(coef(summary(lmerBAN)))# extract coefficients
+    base.no2.100.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(base.no2.100.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+    base.no2.100.coefs[[i]]$LCI=base.no2.100.coefs[[i]]$Estimate-1.96*base.no2.100.coefs[[i]]$Std..Error
+    base.no2.100.coefs[[i]]$UCI=base.no2.100.coefs[[i]]$Estimate+1.96*base.no2.100.coefs[[i]]$Std..Error
+    
+    base.no2.100.coefs[[i]]$FC=10^(base.no2.100.coefs[[i]]$Estimate)
+    base.no2.100.coefs[[i]]$LFC=10^(base.no2.100.coefs[[i]]$LCI)
+    base.no2.100.coefs[[i]]$UFC=10^(base.no2.100.coefs[[i]]$UCI)
+    base.no2.100.coefs[[i]]$PC=((10^(base.no2.100.coefs[[i]]$Estimate))-1)*100
+    base.no2.100.coefs[[i]]$LPC=((10^(base.no2.100.coefs[[i]]$LCI))-1)*100
+    base.no2.100.coefs[[i]]$UPC=((10^(base.no2.100.coefs[[i]]$UCI))-1)*100
+    base.no2.100.coefs[[i]]$names=bio_names[i]
+    
+  }
+  
+  
+base.no2.100_100<-data.frame()
+  
+for (i in 1:6){
+    base.no2.100_100<-rbind(base.no2.100_100, base.no2.100.coefs[[i]][7,])
+  }
+
+write.csv(base.no2.100_100, "base.no2.100_100.csv")  
+
+base.no2.100_no2<-data.frame()
+
+for (i in 1:6){
+    base.no2.100_no2<-rbind(base.no2.100_no2, base.no2.100.coefs[[i]][8,])
+  }
+
+write.csv(base.no2.100_no2, "base.no2.100_no2.csv")  
+
+  
+base.no2.100_COPD<-data.frame()
+  
+for (i in 1:6){
+    base.no2.100_COPD<-rbind(base.no2.100_COPD, base.no2.100.coefs[[i]][2,])
+  }
   
 
+write.csv(base.no2.100_COPD, "base.no2.100_COPD.csv")  
+
+
+base.no2.100_IHD<-data.frame()
+  
+for (i in 1:6){
+    base.no2.100_IHD<-rbind(base.no2.100_IHD, base.no2.100.coefs[[i]][3,])
+}
+
+
+write.csv(base.no2.100_IHD, "base.no2.100_IHD.csv")  
