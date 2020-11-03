@@ -382,9 +382,9 @@ for (i in 1:6){
    }
 
    
-###section C############################################################
-####test the no2 within 100m buffers effect on concentrations####
-#######################################################################
+##################################section C#######################################################################
+###################################test the long-term no2 concentrations effects on biomarkers' concentrations####
+##################################################################################################################
 base.no2.coefs<-list()
     
       
@@ -609,4 +609,93 @@ for (i in 1:6){
 }
 
 
-write.csv(base.no2.100_IHD, "base.no2.100_IHD.csv")  
+write.csv(base.no2.100_IHD, "base.no2.100_IHD.csv")
+
+
+######################################################################################plot#######
+#################################################################################################
+
+
+p10<-ggplot(AA, aes(x=Group, y=ANAP1_Cr, fill=Group))+geom_boxplot()+
+  scale_y_log10(breaks=c(0.001, 0.01,0.1,1,10,100,1000),labels=c(0.001, 0.01,0.1,1,10,100,1000),limits=c(0.001,1000))+ 
+  theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
+                   axis.title.y=element_blank(),legend.position="none")+ggtitle("A.1-ANAP")+
+  stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)+
+  annotate("rect", xmin = 1, xmax = 3, ymin = 350, ymax =350, alpha=1,colour = "black")+
+  annotate("rect", xmin = 1, xmax = 1, ymin = 250, ymax =350, alpha=1,colour = "black")+
+  annotate("rect", xmin = 3, xmax = 3, ymin = 250, ymax =350, alpha=1,colour = "black")+
+  geom_text(aes(x=2, y=400, label="***", size=8))
+
+
+p11<-ggplot(AA, aes(x=Group, y=ANAP2_Cr, fill=Group))+geom_boxplot()+
+  scale_y_log10(breaks=c(0.001, 0.01,0.1,1,10,100,1000),labels=c(0.001, 0.01,0.1,1,10,100,1000),limits=c(0.001,1000))+
+  theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
+                   axis.title.y=element_blank(),legend.position="none")+ggtitle("B.2-ANAP")+
+  stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)+
+  annotate("rect", xmin = 1, xmax = 2, ymin = 200, ymax =200, alpha=1,colour = "black")+
+  annotate("rect", xmin = 1, xmax = 1, ymin=150 , ymax =200, alpha=1,colour = "black")+
+  annotate("rect", xmin = 2, xmax = 2, ymin = 150, ymax =200, alpha=1,colour = "black")+
+  geom_text(aes(x=1.5, y=250, label="*", size=8))+
+  annotate("rect", xmin = 1, xmax = 3, ymin = 550, ymax =550, alpha=1,colour = "black")+
+  annotate("rect", xmin = 1, xmax = 1, ymin = 400, ymax =550, alpha=1,colour = "black")+
+  annotate("rect", xmin = 3, xmax = 3, ymin = 400, ymax =550, alpha=1,colour = "black")+
+  geom_text(aes(x=2, y=600, label="***", size=8))
+
+
+p12<-ggplot(AA, aes(x=Group, y=AFLU2_Cr, fill=Group))+geom_boxplot()+
+  scale_y_log10(breaks=c(0.001, 0.01,0.1,1,10,100,1000),labels=c(0.001, 0.01,0.1,1,10,100,1000),limits=c(0.001,1000))+ 
+  theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
+                   axis.title.y=element_blank(),legend.position="none")+ggtitle("C.2-AFLU")+
+  stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)
+
+
+p13<-ggplot(AA, aes(x=Group, y=APHE9_Cr, fill=Group))+geom_boxplot()+
+  scale_y_log10(breaks=c(0.001, 0.01,0.1,1,10,100,1000,10000),labels=c(0.001, 0.01,0.1,1,10,100,1000,10000),limits=c(0.001,10000))+
+  theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
+                   axis.title.y=element_blank(),legend.position="none")+ggtitle("D.9-APHE")+
+  stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)
+
+
+p14<-ggplot(AA, aes(x=Group, y=APYR1_Cr, fill=Group))+geom_boxplot()+
+  scale_y_log10(breaks=c(0.001, 0.01,0.1,1,10,100),labels=c(0.001, 0.01,0.1,1,10,100),limits=c(0.001,100))+
+  theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
+                   axis.title.y=element_blank(),legend.position="none")+ggtitle("E.1-APYR")+
+  stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)+
+  annotate("rect", xmin = 1, xmax = 3, ymin = 10, ymax =10, alpha=1,colour = "black")+
+  annotate("rect", xmin = 1, xmax = 1, ymin = 7, ymax =10, alpha=1,colour = "black")+
+  annotate("rect", xmin = 3, xmax = 3, ymin = 7, ymax =10, alpha=1,colour = "black")+
+  geom_text(aes(x=2, y=13, label="***", size=8))
+
+p15<-ggplot(AA, aes(x=Group, y=TAPAHs_Cr, fill=Group))+geom_boxplot()+
+  scale_y_log10(breaks=c(0.01,0.1,1,10,100,1000,10000),labels=c(0.01,0.1,1,10,100,1000, 10000),limits=c(0.01,10000))+
+  theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
+                   axis.title.y=element_blank(),legend.position="none")+ggtitle("F.\u03A3TAPAHs")+
+  stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)+
+  annotate("rect", xmin = 1, xmax = 2, ymin = 1000, ymax =1000, alpha=1,colour = "black")+
+  annotate("rect", xmin = 1, xmax = 1, ymin = 800, ymax =1000, alpha=1,colour = "black")+
+  annotate("rect", xmin = 2, xmax = 2, ymin = 800, ymax =1000, alpha=1,colour = "black")+
+  geom_text(aes(x=1.5, y=1100, label="**", size=8))+
+  annotate("rect", xmin = 1, xmax = 3, ymin = 3500, ymax =3500, alpha=1,colour = "black")+
+  annotate("rect", xmin = 1, xmax = 1, ymin = 2500, ymax =3500, alpha=1,colour = "black")+
+  annotate("rect", xmin = 3, xmax = 3, ymin = 2500, ymax =3500, alpha=1,colour = "black")+
+  geom_text(aes(x=2, y=4000, label="***", size=8))
+
+
+
+
+###function to extract the legend
+extract_legend <- function(my_ggp) {
+  step1 <- ggplot_gtable(ggplot_build(my_ggp))
+  step2 <- which(sapply(step1$grobs, function(x) x$name) == "guide-box")
+  step3 <- step1$grobs[[step2]]
+  return(step3)
+}
+shared_legend <- extract_legend(p9)
+
+grid.arrange(arrangeGrob(p10, p11,p12, p13, p14, p15,nrow=2, 
+                         left=textGrob("Urinary concentrations (\u03BCg/g creatinine)", 
+                                       gp = gpar(fontsize = 12, fontface = 'bold'),rot = 90, vjust = 1)), shared_legend,heights = c(10, 1))
+
+
+
+
