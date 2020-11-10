@@ -1054,150 +1054,413 @@ colnames(os2_LAEI_VKM_polyline_buffer100m)
 
 os2_buffer100m<-os2_LAEI_VKM_polyline_buffer100m[, c(1,51:76, 103, 109)]
 
+####diesel
 os2_buffer100m$aadt.tot.d<-os2_buffer100m$AADTDcar13+os2_buffer100m$AADTDLgv13+os2_buffer100m$AADTCoac_1+os2_buffer100m$AADTRigi_1+os2_buffer100m$AADTArti_1
 os2_buffer100m$aadt.tot.d.length<-os2_buffer100m$aadt.tot.d*os2_buffer100m$length_indi
 
 os2_buffer100m$vkm.tot.d<-os2_buffer100m$VKMDCar13+os2_buffer100m$VKMDLgv13+os2_buffer100m$VKMCoach13+os2_buffer100m$VKMRigid13+os2_buffer100m$VKMArtic13
 
+#####petrol
+
+os2_buffer100m$aadt.tot.p<-os2_buffer100m$AADTPcar13+os2_buffer100m$AADTPLgv13
+os2_buffer100m$aadt.tot.p.length<-os2_buffer100m$aadt.tot.p*os2_buffer100m$length_indi
+
+os2_buffer100m$vkm.tot.p<-os2_buffer100m$VKMPCar13+os2_buffer100m$VKMPLgv13
+
 colnames(os2_buffer100m)[28]<-"id"
 
 os2_b100m<-os2_buffer100m %>% group_by(id) %>% 
-  summarize(aadt=sum(aadt.tot.d), aadt.length.d=sum(aadt.tot.d.length),vkm.d=sum(vkm.tot.d) )
+  summarize(aadt.d=sum(aadt.tot.d),aadt.p=sum(aadt.tot.p), 
+            aadt.length.d=sum(aadt.tot.d.length),aadt.length.p=sum(aadt.tot.p.length),
+            vkm.d=sum(vkm.tot.d), vkm.p=sum(vkm.tot.p),
+            aadt.taxi=sum(AADTTaxi13), aadt.moto=sum(AADTMoto_1),
+            aadt.bus=sum(AADTLtBu_1), aadt.d.heavy=sum(AADTDLgv13+AADTCoac_1+AADTRigi_1+AADTArti_1),
+            aadt.moto=sum(VKMMotor_1),aadt.e=sum(AADTECar13+AADT_ELg_1),aadt.total=sum(AADTTOTA_1),
+            vkm.bus=sum(VKMBus13),
+            vkm.taxi=sum(VKMTaxi13), vkm.d.heavy=sum(VKMDLgv13+VKMCoach13+VKMRigid13+VKMArtic13),
+            vkm.e=sum(VKMECar13+VKMELgv13),vkm.total=sum(VKMTOTAL13)
+            )
 
 
 colnames(DD)[12]<-"id"
 
-DD<-merge(DD, o2_b100m, all.x = TRUE)
+DD<-merge(DD, os2_b100m, all.x = TRUE)
 
 DD[is.na(DD)]<-0
 
-DD<-DD[, c(2,3,4,5,6,7,8,9,10,11,12,1,13,14,15,16,17,18,19)]
+DD<-DD[, c(2,3,4,5,6,7,8,9,10,11,12,1,13:33)]
 
 
 #################################################################################################
 ################################################################################################
 #######################AADTD####################################################################
 
-aadt.buffer.coefs<-list()
+aadt.diesel.buffer.coefs<-list()
 
 
 for (i in 1:6) {
   
   lmerO=lmer(log10(DD[,i])~DD[,17]+DD[,7]+DD[,8]+DD[,9]+DD[,10]+DD[,11]+(1|DD[,12]))
-  aadt.buffer.coefs[[i]]<-data.frame(coef(summary(lmerO)))# extract coefficients
-  aadt.buffer.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(aadt.buffer.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
-  aadt.buffer.coefs[[i]]$LCI=aadt.buffer.coefs[[i]]$Estimate-1.96*aadt.buffer.coefs[[i]]$Std..Error
-  aadt.buffer.coefs[[i]]$UCI=aadt.buffer.coefs[[i]]$Estimate+1.96*aadt.buffer.coefs[[i]]$Std..Error
+  aadt.diesel.buffer.coefs[[i]]<-data.frame(coef(summary(lmerO)))# extract coefficients
+  aadt.diesel.buffer.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(aadt.diesel.buffer.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+  aadt.diesel.buffer.coefs[[i]]$LCI=aadt.diesel.buffer.coefs[[i]]$Estimate-1.96*aadt.diesel.buffer.coefs[[i]]$Std..Error
+  aadt.diesel.buffer.coefs[[i]]$UCI=aadt.diesel.buffer.coefs[[i]]$Estimate+1.96*aadt.diesel.buffer.coefs[[i]]$Std..Error
   
-  aadt.buffer.coefs[[i]]$FC=10^(aadt.buffer.coefs[[i]]$Estimate)
-  aadt.buffer.coefs[[i]]$LFC=10^(aadt.buffer.coefs[[i]]$LCI)
-  aadt.buffer.coefs[[i]]$UFC=10^(aadt.buffer.coefs[[i]]$UCI)
-  aadt.buffer.coefs[[i]]$PC=((10^(aadt.buffer.coefs[[i]]$Estimate))-1)*100
-  aadt.buffer.coefs[[i]]$LPC=((10^(aadt.buffer.coefs[[i]]$LCI))-1)*100
-  aadt.buffer.coefs[[i]]$UPC=((10^(aadt.buffer.coefs[[i]]$UCI))-1)*100
+  aadt.diesel.buffer.coefs[[i]]$FC=10^(aadt.diesel.buffer.coefs[[i]]$Estimate)
+  aadt.diesel.buffer.coefs[[i]]$LFC=10^(aadt.diesel.buffer.coefs[[i]]$LCI)
+  aadt.diesel.buffer.coefs[[i]]$UFC=10^(aadt.diesel.buffer.coefs[[i]]$UCI)
+  aadt.diesel.buffer.coefs[[i]]$PC=((10^(aadt.diesel.buffer.coefs[[i]]$Estimate))-1)*100
+  aadt.diesel.buffer.coefs[[i]]$LPC=((10^(aadt.diesel.buffer.coefs[[i]]$LCI))-1)*100
+  aadt.diesel.buffer.coefs[[i]]$UPC=((10^(aadt.diesel.buffer.coefs[[i]]$UCI))-1)*100
 }
 
-names(aadt.buffer.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
+names(aadt.diesel.buffer.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
 
 for (i in 1:6){
-  write.csv(aadt.buffer.coefs[[i]], paste0("ModelH_", bio_names[i],".csv"))
+  write.csv(aadt.diesel.buffer.coefs[[i]], paste0("ModelH_", bio_names[i],".csv"))
 }
 
 
 
-aadt.buffer<-data.frame()
+aadt.diesel.buffer<-data.frame()
 
 for (i in 1:6){
-  aadt.buffer<-rbind(aadt.buffer, aadt.buffer.coefs[[i]][2,])
+  aadt.diesel.buffer<-rbind(aadt.diesel.buffer, aadt.diesel.buffer.coefs[[i]][2,])
 }
 #################################################################################################
 ################################################################################################
 #######################AADTD####################################################################
 
-aadt.len.buffer.coefs<-list()
+aadt.diesel.len.buffer.coefs<-list()
 
 
 for (i in 1:6) {
   
   lmerQ=lmer(log10(DD[,i])~DD[,18]+DD[,7]+DD[,8]+DD[,9]+DD[,10]+DD[,11]+(1|DD[,12]))
-  aadt.len.buffer.coefs[[i]]<-data.frame(coef(summary(lmerQ)))# extract coefficients
-  aadt.len.buffer.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(aadt.len.buffer.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
-  aadt.len.buffer.coefs[[i]]$LCI=aadt.len.buffer.coefs[[i]]$Estimate-1.96*aadt.len.buffer.coefs[[i]]$Std..Error
-  aadt.len.buffer.coefs[[i]]$UCI=aadt.len.buffer.coefs[[i]]$Estimate+1.96*aadt.len.buffer.coefs[[i]]$Std..Error
+  aadt.diesel.len.buffer.coefs[[i]]<-data.frame(coef(summary(lmerQ)))# extract coefficients
+  aadt.diesel.len.buffer.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(aadt.diesel.len.buffer.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+  aadt.diesel.len.buffer.coefs[[i]]$LCI=aadt.diesel.len.buffer.coefs[[i]]$Estimate-1.96*aadt.diesel.len.buffer.coefs[[i]]$Std..Error
+  aadt.diesel.len.buffer.coefs[[i]]$UCI=aadt.diesel.len.buffer.coefs[[i]]$Estimate+1.96*aadt.diesel.len.buffer.coefs[[i]]$Std..Error
   
-  aadt.len.buffer.coefs[[i]]$FC=10^(aadt.len.buffer.coefs[[i]]$Estimate)
-  aadt.len.buffer.coefs[[i]]$LFC=10^(aadt.len.buffer.coefs[[i]]$LCI)
-  aadt.len.buffer.coefs[[i]]$UFC=10^(aadt.len.buffer.coefs[[i]]$UCI)
-  aadt.len.buffer.coefs[[i]]$PC=((10^(aadt.len.buffer.coefs[[i]]$Estimate))-1)*100
-  aadt.len.buffer.coefs[[i]]$LPC=((10^(aadt.len.buffer.coefs[[i]]$LCI))-1)*100
-  aadt.len.buffer.coefs[[i]]$UPC=((10^(aadt.len.buffer.coefs[[i]]$UCI))-1)*100
+  aadt.diesel.len.buffer.coefs[[i]]$FC=10^(aadt.diesel.len.buffer.coefs[[i]]$Estimate)
+  aadt.diesel.len.buffer.coefs[[i]]$LFC=10^(aadt.diesel.len.buffer.coefs[[i]]$LCI)
+  aadt.diesel.len.buffer.coefs[[i]]$UFC=10^(aadt.diesel.len.buffer.coefs[[i]]$UCI)
+  aadt.diesel.len.buffer.coefs[[i]]$PC=((10^(aadt.diesel.len.buffer.coefs[[i]]$Estimate))-1)*100
+  aadt.diesel.len.buffer.coefs[[i]]$LPC=((10^(aadt.diesel.len.buffer.coefs[[i]]$LCI))-1)*100
+  aadt.diesel.len.buffer.coefs[[i]]$UPC=((10^(aadt.diesel.len.buffer.coefs[[i]]$UCI))-1)*100
 }
 
-names(aadt.len.buffer.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
+names(aadt.diesel.len.buffer.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
 
 for (i in 1:6){
-  write.csv(aadt.buffer.coefs[[i]], paste0("ModelH_", bio_names[i],".csv"))
+  write.csv(aadt.diesel.buffer.coefs[[i]], paste0("ModelH_", bio_names[i],".csv"))
 }
 
 
 
-aadt.len.buffer<-data.frame()
+aadt.diesel.len.buffer<-data.frame()
 
 for (i in 1:6){
-  aadt.len.buffer<-rbind(aadt.len.buffer, aadt.len.buffer.coefs[[i]][2,])
+  aadt.diesel.len.buffer<-rbind(aadt.diesel.len.buffer, aadt.diesel.len.buffer.coefs[[i]][2,])
 }
 #################################################################################################
 ################################################################################################
 #######################VKMD####################################################################
 
-vkmd.buffer.coefs<-list()
+vkmd.diesel.buffer.coefs<-list()
 
 
 for (i in 1:6) {
   
   lmerP=lmer(log10(DD[,i])~DD[,19]+DD[,7]+DD[,8]+DD[,9]+DD[,10]+DD[,11]+(1|DD[,12]))
-  vkmd.buffer.coefs[[i]]<-data.frame(coef(summary(lmerP)))# extract coefficients
-  vkmd.buffer.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(vkmd.buffer.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
-  vkmd.buffer.coefs[[i]]$LCI=vkmd.buffer.coefs[[i]]$Estimate-1.96*vkmd.buffer.coefs[[i]]$Std..Error
-  vkmd.buffer.coefs[[i]]$UCI=vkmd.buffer.coefs[[i]]$Estimate+1.96*vkmd.buffer.coefs[[i]]$Std..Error
+  vkmd.diesel.buffer.coefs[[i]]<-data.frame(coef(summary(lmerP)))# extract coefficients
+  vkmd.diesel.buffer.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(vkmd.diesel.buffer.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+  vkmd.diesel.buffer.coefs[[i]]$LCI=vkmd.diesel.buffer.coefs[[i]]$Estimate-1.96*vkmd.diesel.buffer.coefs[[i]]$Std..Error
+  vkmd.diesel.buffer.coefs[[i]]$UCI=vkmd.diesel.buffer.coefs[[i]]$Estimate+1.96*vkmd.diesel.buffer.coefs[[i]]$Std..Error
   
-  vkmd.buffer.coefs[[i]]$FC=10^(vkmd.buffer.coefs[[i]]$Estimate)
-  vkmd.buffer.coefs[[i]]$LFC=10^(vkmd.buffer.coefs[[i]]$LCI)
-  vkmd.buffer.coefs[[i]]$UFC=10^(vkmd.buffer.coefs[[i]]$UCI)
-  vkmd.buffer.coefs[[i]]$PC=((10^(vkmd.buffer.coefs[[i]]$Estimate))-1)*100
-  vkmd.buffer.coefs[[i]]$LPC=((10^(vkmd.buffer.coefs[[i]]$LCI))-1)*100
-  vkmd.buffer.coefs[[i]]$UPC=((10^(vkmd.buffer.coefs[[i]]$UCI))-1)*100
+  vkmd.diesel.buffer.coefs[[i]]$FC=10^(vkmd.diesel.buffer.coefs[[i]]$Estimate)
+  vkmd.diesel.buffer.coefs[[i]]$LFC=10^(vkmd.diesel.buffer.coefs[[i]]$LCI)
+  vkmd.diesel.buffer.coefs[[i]]$UFC=10^(vkmd.diesel.buffer.coefs[[i]]$UCI)
+  vkmd.diesel.buffer.coefs[[i]]$PC=((10^(vkmd.diesel.buffer.coefs[[i]]$Estimate))-1)*100
+  vkmd.diesel.buffer.coefs[[i]]$LPC=((10^(vkmd.diesel.buffer.coefs[[i]]$LCI))-1)*100
+  vkmd.diesel.buffer.coefs[[i]]$UPC=((10^(vkmd.diesel.buffer.coefs[[i]]$UCI))-1)*100
 }
 
-names(vkmd.buffer.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
+names(vkmd.diesel.buffer.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
 
 for (i in 1:6){
-  write.csv(vkmd.buffer.coefs[[i]], paste0("ModelI_", bio_names[i],".csv"))
+  write.csv(vkmd.diesel.buffer.coefs[[i]], paste0("ModelI_", bio_names[i],".csv"))
 }
 
 
 
-vkmd.buffer<-data.frame()
+vkmd.diesel.buffer<-data.frame()
 
 for (i in 1:6){
-  vkmd.buffer<-rbind(vkmd.buffer, vkmd.buffer.coefs[[i]][2,])
+  vkmd.diesel.buffer<-rbind(vkmd.diesel.buffer, vkmd.diesel.buffer.coefs[[i]][2,])
 }
 
 
 
 
 
+#################################################################################################
+################################################################################################
+#######################AADTP####################################################################
+
+aadt.petrol.buffer.coefs<-list()
+
+
+for (i in 1:6) {
+  
+  lmerS=lmer(log10(DD[,i])~DD[,18]+DD[,7]+DD[,8]+DD[,9]+DD[,10]+DD[,11]+(1|DD[,12]))
+  aadt.petrol.buffer.coefs[[i]]<-data.frame(coef(summary(lmerS)))# extract coefficients
+  aadt.petrol.buffer.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(aadt.petrol.buffer.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+  aadt.petrol.buffer.coefs[[i]]$LCI=aadt.petrol.buffer.coefs[[i]]$Estimate-1.96*aadt.petrol.buffer.coefs[[i]]$Std..Error
+  aadt.petrol.buffer.coefs[[i]]$UCI=aadt.petrol.buffer.coefs[[i]]$Estimate+1.96*aadt.petrol.buffer.coefs[[i]]$Std..Error
+  
+  aadt.petrol.buffer.coefs[[i]]$FC=10^(aadt.petrol.buffer.coefs[[i]]$Estimate)
+  aadt.petrol.buffer.coefs[[i]]$LFC=10^(aadt.petrol.buffer.coefs[[i]]$LCI)
+  aadt.petrol.buffer.coefs[[i]]$UFC=10^(aadt.petrol.buffer.coefs[[i]]$UCI)
+  aadt.petrol.buffer.coefs[[i]]$PC=((10^(aadt.petrol.buffer.coefs[[i]]$Estimate))-1)*100
+  aadt.petrol.buffer.coefs[[i]]$LPC=((10^(aadt.petrol.buffer.coefs[[i]]$LCI))-1)*100
+  aadt.petrol.buffer.coefs[[i]]$UPC=((10^(aadt.petrol.buffer.coefs[[i]]$UCI))-1)*100
+}
+
+names(aadt.petrol.buffer.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
+
+for (i in 1:6){
+  write.csv(aadt.petrol.buffer.coefs[[i]], paste0("ModelH_", bio_names[i],".csv"))
+}
 
 
 
+aadt.petrol.buffer<-data.frame()
+
+for (i in 1:6){
+  aadt.petrol.buffer<-rbind(aadt.petrol.buffer, aadt.petrol.buffer.coefs[[i]][2,])
+}
+#################################################################################################
+################################################################################################
+#######################AADTD####################################################################
+
+aadt.petrol.len.buffer.coefs<-list()
+
+
+for (i in 1:6) {
+  
+  lmerT=lmer(log10(DD[,i])~DD[,18]+DD[,7]+DD[,8]+DD[,9]+DD[,10]+DD[,11]+(1|DD[,12]))
+  aadt.petrol.len.buffer.coefs[[i]]<-data.frame(coef(summary(lmerT)))# extract coefficients
+  aadt.petrol.len.buffer.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(aadt.petrol.len.buffer.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+  aadt.petrol.len.buffer.coefs[[i]]$LCI=aadt.petrol.len.buffer.coefs[[i]]$Estimate-1.96*aadt.petrol.len.buffer.coefs[[i]]$Std..Error
+  aadt.petrol.len.buffer.coefs[[i]]$UCI=aadt.petrol.len.buffer.coefs[[i]]$Estimate+1.96*aadt.petrol.len.buffer.coefs[[i]]$Std..Error
+  
+  aadt.petrol.len.buffer.coefs[[i]]$FC=10^(aadt.petrol.len.buffer.coefs[[i]]$Estimate)
+  aadt.petrol.len.buffer.coefs[[i]]$LFC=10^(aadt.petrol.len.buffer.coefs[[i]]$LCI)
+  aadt.petrol.len.buffer.coefs[[i]]$UFC=10^(aadt.petrol.len.buffer.coefs[[i]]$UCI)
+  aadt.petrol.len.buffer.coefs[[i]]$PC=((10^(aadt.petrol.len.buffer.coefs[[i]]$Estimate))-1)*100
+  aadt.petrol.len.buffer.coefs[[i]]$LPC=((10^(aadt.petrol.len.buffer.coefs[[i]]$LCI))-1)*100
+  aadt.petrol.len.buffer.coefs[[i]]$UPC=((10^(aadt.petrol.len.buffer.coefs[[i]]$UCI))-1)*100
+}
+
+names(aadt.petrol.len.buffer.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
+
+for (i in 1:6){
+  write.csv(aadt.petrol.buffer.coefs[[i]], paste0("ModelH_", bio_names[i],".csv"))
+}
 
 
 
+aadt.petrol.len.buffer<-data.frame()
+
+for (i in 1:6){
+  aadt.petrol.len.buffer<-rbind(aadt.petrol.len.buffer, aadt.petrol.len.buffer.coefs[[i]][2,])
+}
+#################################################################################################
+################################################################################################
+#######################VKMD####################################################################
+
+vkmd.petrol.buffer.coefs<-list()
+
+
+for (i in 1:6) {
+  
+  lmerU=lmer(log10(DD[,i])~DD[,19]+DD[,7]+DD[,8]+DD[,9]+DD[,10]+DD[,11]+(1|DD[,12]))
+  vkmd.petrol.buffer.coefs[[i]]<-data.frame(coef(summary(lmerU)))# extract coefficients
+  vkmd.petrol.buffer.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(vkmd.petrol.buffer.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+  vkmd.petrol.buffer.coefs[[i]]$LCI=vkmd.petrol.buffer.coefs[[i]]$Estimate-1.96*vkmd.petrol.buffer.coefs[[i]]$Std..Error
+  vkmd.petrol.buffer.coefs[[i]]$UCI=vkmd.petrol.buffer.coefs[[i]]$Estimate+1.96*vkmd.petrol.buffer.coefs[[i]]$Std..Error
+  
+  vkmd.petrol.buffer.coefs[[i]]$FC=10^(vkmd.petrol.buffer.coefs[[i]]$Estimate)
+  vkmd.petrol.buffer.coefs[[i]]$LFC=10^(vkmd.petrol.buffer.coefs[[i]]$LCI)
+  vkmd.petrol.buffer.coefs[[i]]$UFC=10^(vkmd.petrol.buffer.coefs[[i]]$UCI)
+  vkmd.petrol.buffer.coefs[[i]]$PC=((10^(vkmd.petrol.buffer.coefs[[i]]$Estimate))-1)*100
+  vkmd.petrol.buffer.coefs[[i]]$LPC=((10^(vkmd.petrol.buffer.coefs[[i]]$LCI))-1)*100
+  vkmd.petrol.buffer.coefs[[i]]$UPC=((10^(vkmd.petrol.buffer.coefs[[i]]$UCI))-1)*100
+}
+
+names(vkmd.petrol.buffer.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
+
+for (i in 1:6){
+  write.csv(vkmd.petrol.buffer.coefs[[i]], paste0("ModelI_", bio_names[i],".csv"))
+}
 
 
 
+vkmd.petrol.buffer<-data.frame()
+
+for (i in 1:6){
+  vkmd.buffer<-rbind(vkmd.petrol.buffer, vkmd.petrol.buffer.coefs[[i]][2,])
+}
 
 
+
+#################################################################################################
+################################################################################################
+#######################AADTE####################################################################
+
+aadt.electric.buffer.coefs<-list()
+
+
+for (i in 1:6) {
+  
+  lmerV=lmer(log10(DD[,i])~DD[,27]+DD[,7]+DD[,8]+DD[,9]+DD[,10]+DD[,11]+(1|DD[,12]))
+  aadt.electric.buffer.coefs[[i]]<-data.frame(coef(summary(lmerV)))# extract coefficients
+  aadt.electric.buffer.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(aadt.electric.buffer.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+  aadt.electric.buffer.coefs[[i]]$LCI=aadt.electric.buffer.coefs[[i]]$Estimate-1.96*aadt.electric.buffer.coefs[[i]]$Std..Error
+  aadt.electric.buffer.coefs[[i]]$UCI=aadt.electric.buffer.coefs[[i]]$Estimate+1.96*aadt.electric.buffer.coefs[[i]]$Std..Error
+  
+  aadt.electric.buffer.coefs[[i]]$FC=10^(aadt.electric.buffer.coefs[[i]]$Estimate)
+  aadt.electric.buffer.coefs[[i]]$LFC=10^(aadt.electric.buffer.coefs[[i]]$LCI)
+  aadt.electric.buffer.coefs[[i]]$UFC=10^(aadt.electric.buffer.coefs[[i]]$UCI)
+  aadt.electric.buffer.coefs[[i]]$PC=((10^(aadt.electric.buffer.coefs[[i]]$Estimate))-1)*100
+  aadt.electric.buffer.coefs[[i]]$LPC=((10^(aadt.electric.buffer.coefs[[i]]$LCI))-1)*100
+  aadt.electric.buffer.coefs[[i]]$UPC=((10^(aadt.electric.buffer.coefs[[i]]$UCI))-1)*100
+}
+
+names(aadt.electric.buffer.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
+
+for (i in 1:6){
+  write.csv(aadt.electric.buffer.coefs[[i]], paste0("ModelH_", bio_names[i],".csv"))
+}
+
+
+
+aadt.electric.buffer<-data.frame()
+
+for (i in 1:6){
+  aadt.electric.buffer<-rbind(aadt.electric.buffer, aadt.electric.buffer.coefs[[i]][2,])
+}
+
+
+
+#################################################################################################
+################################################################################################
+#######################VKMD####################################################################
+
+vkmd.electric.buffer.coefs<-list()
+
+
+for (i in 1:6) {
+  
+  lmerW=lmer(log10(DD[,i])~DD[,31]+DD[,7]+DD[,8]+DD[,9]+DD[,10]+DD[,11]+(1|DD[,12]))
+  vkmd.electric.buffer.coefs[[i]]<-data.frame(coef(summary(lmerW)))# extract coefficients
+  vkmd.electric.buffer.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(vkmd.electric.buffer.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+  vkmd.electric.buffer.coefs[[i]]$LCI=vkmd.electric.buffer.coefs[[i]]$Estimate-1.96*vkmd.electric.buffer.coefs[[i]]$Std..Error
+  vkmd.electric.buffer.coefs[[i]]$UCI=vkmd.electric.buffer.coefs[[i]]$Estimate+1.96*vkmd.electric.buffer.coefs[[i]]$Std..Error
+  
+  vkmd.electric.buffer.coefs[[i]]$FC=10^(vkmd.electric.buffer.coefs[[i]]$Estimate)
+  vkmd.electric.buffer.coefs[[i]]$LFC=10^(vkmd.electric.buffer.coefs[[i]]$LCI)
+  vkmd.electric.buffer.coefs[[i]]$UFC=10^(vkmd.electric.buffer.coefs[[i]]$UCI)
+  vkmd.electric.buffer.coefs[[i]]$PC=((10^(vkmd.electric.buffer.coefs[[i]]$Estimate))-1)*100
+  vkmd.electric.buffer.coefs[[i]]$LPC=((10^(vkmd.electric.buffer.coefs[[i]]$LCI))-1)*100
+  vkmd.electric.buffer.coefs[[i]]$UPC=((10^(vkmd.electric.buffer.coefs[[i]]$UCI))-1)*100
+}
+
+names(vkmd.electric.buffer.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
+
+for (i in 1:6){
+  write.csv(vkmd.electric.buffer.coefs[[i]], paste0("ModelI_", bio_names[i],".csv"))
+}
+
+
+
+vkmd.electric.buffer<-data.frame()
+
+for (i in 1:6){
+  vkmd.electric.buffer<-rbind(vkmd.electric.buffer, vkmd.electric.buffer.coefs[[i]][2,])
+}
+
+
+
+#################################################################################################
+################################################################################################
+#######################AADTE####################################################################
+
+indi.buffer.coefs<-list()
+
+
+for (i in 1:6) {
+  
+  lmerY=lmer(log10(DD[,i])~DD[,28]+DD[,7]+DD[,8]+DD[,9]+DD[,10]+DD[,11]+(1|DD[,12]))
+  indi.buffer.coefs[[i]]<-data.frame(coef(summary(lmerY)))# extract coefficients
+  indi.buffer.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(indi.buffer.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+  indi.buffer.coefs[[i]]$LCI=indi.buffer.coefs[[i]]$Estimate-1.96*indi.buffer.coefs[[i]]$Std..Error
+  indi.buffer.coefs[[i]]$UCI=indi.buffer.coefs[[i]]$Estimate+1.96*indi.buffer.coefs[[i]]$Std..Error
+  
+  indi.buffer.coefs[[i]]$FC=10^(indi.buffer.coefs[[i]]$Estimate)
+  indi.buffer.coefs[[i]]$LFC=10^(indi.buffer.coefs[[i]]$LCI)
+  indi.buffer.coefs[[i]]$UFC=10^(indi.buffer.coefs[[i]]$UCI)
+  indi.buffer.coefs[[i]]$PC=((10^(indi.buffer.coefs[[i]]$Estimate))-1)*100
+  indi.buffer.coefs[[i]]$LPC=((10^(indi.buffer.coefs[[i]]$LCI))-1)*100
+  indi.buffer.coefs[[i]]$UPC=((10^(indi.buffer.coefs[[i]]$UCI))-1)*100
+}
+
+
+indi.buffer<-data.frame()
+
+for (i in 1:6){
+  indi.buffer<-rbind(indi.buffer, indi.buffer.coefs[[i]][2,])
+}
+
+print(indi.buffer)
+
+#################################################################################################
+################################################################################################
+#######################VKMD####################################################################
+
+vkmd.electric.buffer.coefs<-list()
+
+
+for (i in 1:6) {
+  
+  lmerW=lmer(log10(DD[,i])~DD[,31]+DD[,7]+DD[,8]+DD[,9]+DD[,10]+DD[,11]+(1|DD[,12]))
+  vkmd.electric.buffer.coefs[[i]]<-data.frame(coef(summary(lmerW)))# extract coefficients
+  vkmd.electric.buffer.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(vkmd.electric.buffer.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+  vkmd.electric.buffer.coefs[[i]]$LCI=vkmd.electric.buffer.coefs[[i]]$Estimate-1.96*vkmd.electric.buffer.coefs[[i]]$Std..Error
+  vkmd.electric.buffer.coefs[[i]]$UCI=vkmd.electric.buffer.coefs[[i]]$Estimate+1.96*vkmd.electric.buffer.coefs[[i]]$Std..Error
+  
+  vkmd.electric.buffer.coefs[[i]]$FC=10^(vkmd.electric.buffer.coefs[[i]]$Estimate)
+  vkmd.electric.buffer.coefs[[i]]$LFC=10^(vkmd.electric.buffer.coefs[[i]]$LCI)
+  vkmd.electric.buffer.coefs[[i]]$UFC=10^(vkmd.electric.buffer.coefs[[i]]$UCI)
+  vkmd.electric.buffer.coefs[[i]]$PC=((10^(vkmd.electric.buffer.coefs[[i]]$Estimate))-1)*100
+  vkmd.electric.buffer.coefs[[i]]$LPC=((10^(vkmd.electric.buffer.coefs[[i]]$LCI))-1)*100
+  vkmd.electric.buffer.coefs[[i]]$UPC=((10^(vkmd.electric.buffer.coefs[[i]]$UCI))-1)*100
+}
+
+names(vkmd.electric.buffer.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
+
+for (i in 1:6){
+  write.csv(vkmd.electric.buffer.coefs[[i]], paste0("ModelI_", bio_names[i],".csv"))
+}
+
+
+
+vkmd.electric.buffer<-data.frame()
+
+for (i in 1:6){
+  vkmd.electric.buffer<-rbind(vkmd.electric.buffer, vkmd.electric.buffer.coefs[[i]][2,])
+}
 
 
 
