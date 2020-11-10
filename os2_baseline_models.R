@@ -6,6 +6,8 @@ library(ggplot2)
 library(scales)
 library(gridExtra)
 library(grid)
+library(stringr)
+require(dplyr)
 
 path<-"C:/Users/zy125/Box Sync/Postdoc/os2/data"
 
@@ -695,6 +697,508 @@ shared_legend <- extract_legend(p9)
 grid.arrange(arrangeGrob(p10, p11,p12, p13, p14, p15,nrow=2, 
                          left=textGrob("Urinary concentrations (\u03BCg/g creatinine)", 
                                        gp = gpar(fontsize = 12, fontface = 'bold'),rot = 90, vjust = 1)), shared_legend,heights = c(10, 1))
+
+
+#######################################################################################################
+######################################add diesel data#################################################
+######################################################################################################
+
+os2_LAIE_VKM_polyline <- read_csv("C:/Users/zy125/Box Sync/Postdoc/os2/os2_LAIE_VKM_polyline.csv")
+
+n<-str_remove_all(colnames(os2_LAIE_VKM_polyline), "join_")
+
+n[1]<-"id1"
+
+colnames(os2_LAIE_VKM_polyline)<-n
+
+
+Fulldata_polyline<-merge(Fulldata, os2_LAIE_VKM_polyline, by="id1", all.x=TRUE)
+
+############################################################################################################
+
+baseline_vkm=subset(Fulldata_polyline,Post==0)
+
+BB=data.frame()
+BB[1:238,1]=baseline_vkm$ANAP1_Cr
+BB[1:238,2]=baseline_vkm$ANAP2_Cr
+BB[1:238,3]=baseline_vkm$AFLU2_Cr
+BB[1:238,4]=baseline_vkm$APHE9_Cr
+BB[1:238,5]=baseline_vkm$APYR1_Cr
+BB[1:238,6]=baseline_vkm$TAPAHs_Cr
+BB[1:238,7]=baseline_vkm$COPD
+BB[1:238,8]=baseline_vkm$IHD
+BB[1:238,9]=baseline_vkm$Age
+BB[1:238,10]=baseline_vkm$Male
+BB[1:238,11]=baseline_vkm$BMI
+BB[1:238,12]=baseline_vkm[,1]
+BB[1:238,13]=baseline_vkm$AADTDcar13 
+BB[1:238,14]=baseline_vkm$VKMDCar13 
+
+
+
+BB=na.omit(BB)
+colnames(BB)<-c("ANAP1_Cr", "ANAP2_Cr","AFLU2_Cr","APHE9_Cr", "APYR1_Cr","TAPAHs_Cr",
+                "COPD", "IHD","Age","Male", "BMI","id", "AADTDcar13","VKMDCar13")
+#################################################################################################
+################################################################################################
+#######################AADTD####################################################################
+
+aadt.coefs<-list()
+
+
+for (i in 1:6) {
+  
+  lmerD=lmer(log10(BB[,i])~log10(BB[,13])+BB[,7]+BB[,8]+BB[,9]+BB[,10]+BB[,11]+(1|BB[,12]))
+  aadt.coefs[[i]]<-data.frame(coef(summary(lmerD)))# extract coefficients
+  aadt.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(aadt.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+  aadt.coefs[[i]]$LCI=aadt.coefs[[i]]$Estimate-1.96*aadt.coefs[[i]]$Std..Error
+  aadt.coefs[[i]]$UCI=aadt.coefs[[i]]$Estimate+1.96*aadt.coefs[[i]]$Std..Error
+  
+  aadt.coefs[[i]]$FC=10^(aadt.coefs[[i]]$Estimate)
+  aadt.coefs[[i]]$LFC=10^(aadt.coefs[[i]]$LCI)
+  aadt.coefs[[i]]$UFC=10^(aadt.coefs[[i]]$UCI)
+  aadt.coefs[[i]]$PC=((10^(aadt.coefs[[i]]$Estimate))-1)*100
+  aadt.coefs[[i]]$LPC=((10^(aadt.coefs[[i]]$LCI))-1)*100
+  aadt.coefs[[i]]$UPC=((10^(aadt.coefs[[i]]$UCI))-1)*100
+}
+
+names(aadt.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
+
+for (i in 1:6){
+  write.csv(aadt.coefs[[i]], paste0("ModelD_", bio_names[i],".csv"))
+}
+
+
+
+aadt<-data.frame()
+
+for (i in 1:6){
+  aadt<-rbind(aadt, aadt.coefs[[i]][2,])
+}
+
+
+#################################################################################################
+################################################################################################
+#######################VKMD####################################################################
+
+vkmd.coefs<-list()
+
+
+for (i in 1:6) {
+  
+  lmerE=lmer(log10(BB[,i])~BB[,14]+BB[,7]+BB[,8]+BB[,9]+BB[,10]+BB[,11]+(1|BB[,12]))
+  vkmd.coefs[[i]]<-data.frame(coef(summary(lmerE)))# extract coefficients
+  vkmd.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(vkmd.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+  vkmd.coefs[[i]]$LCI=vkmd.coefs[[i]]$Estimate-1.96*vkmd.coefs[[i]]$Std..Error
+  vkmd.coefs[[i]]$UCI=vkmd.coefs[[i]]$Estimate+1.96*vkmd.coefs[[i]]$Std..Error
+  
+  vkmd.coefs[[i]]$FC=10^(vkmd.coefs[[i]]$Estimate)
+  vkmd.coefs[[i]]$LFC=10^(vkmd.coefs[[i]]$LCI)
+  vkmd.coefs[[i]]$UFC=10^(vkmd.coefs[[i]]$UCI)
+  vkmd.coefs[[i]]$PC=((10^(vkmd.coefs[[i]]$Estimate))-1)*100
+  vkmd.coefs[[i]]$LPC=((10^(vkmd.coefs[[i]]$LCI))-1)*100
+  vkmd.coefs[[i]]$UPC=((10^(vkmd.coefs[[i]]$UCI))-1)*100
+}
+
+names(vkmd.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
+
+for (i in 1:6){
+  write.csv(vkmd.coefs[[i]], paste0("ModelD_", bio_names[i],".csv"))
+}
+
+
+
+vkmd<-data.frame()
+
+for (i in 1:6){
+  vkmd<-rbind(vkmd, vkmd.coefs[[i]][2,])
+}
+
+####################################################################################################
+##############################################
+
+os2_LAIE_VKM_polygon <- read_csv("C:/Users/zy125/Box Sync/Postdoc/os2/os2_LAIE_VKM_polygon.csv")
+
+
+
+colnames(os2_LAIE_VKM_polygon)[1]<-"id1"
+
+
+Fulldata_polygon<-merge(Fulldata, os2_LAIE_VKM_polygon, by="id1", all.x=TRUE)
+
+
+
+baseline_gon=subset(Fulldata_polygon,Post==0)
+
+CC=data.frame()
+CC[1:238,1]=baseline_gon$ANAP1_Cr
+CC[1:238,2]=baseline_gon$ANAP2_Cr
+CC[1:238,3]=baseline_gon$AFLU2_Cr
+CC[1:238,4]=baseline_gon$APHE9_Cr
+CC[1:238,5]=baseline_gon$APYR1_Cr
+CC[1:238,6]=baseline_gon$TAPAHs_Cr
+CC[1:238,7]=baseline_gon$COPD
+CC[1:238,8]=baseline_gon$IHD
+CC[1:238,9]=baseline_gon$Age
+CC[1:238,10]=baseline_gon$Male
+CC[1:238,11]=baseline_gon$BMI
+CC[1:238,12]=baseline_gon[,1]
+CC[1:238,13]=baseline_gon$VKMDCar13
+CC[1:238,14]=baseline_gon$VKMBus13 
+
+
+
+CC=na.omit(CC)
+colnames(CC)<-c("ANAP1_Cr", "ANAP2_Cr","AFLU2_Cr","APHE9_Cr", "APYR1_Cr","TAPAHs_Cr",
+                "COPD", "IHD","Age","Male", "BMI","id", "VKMDCar13","VKMBus13")
+
+####################################################################################################
+##############################################
+
+plgon.coefs<-list()
+
+
+for (i in 1:6) {
+  
+  lmerF=lmer(log10(CC[,i])~CC[,13]+CC[,7]+CC[,8]+CC[,9]+CC[,10]+CC[,11]+(1|CC[,12]))
+  plgon.coefs[[i]]<-data.frame(coef(summary(lmerF)))# extract coefficients
+  plgon.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(plgon.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+  plgon.coefs[[i]]$LCI=plgon.coefs[[i]]$Estimate-1.96*plgon.coefs[[i]]$Std..Error
+  plgon.coefs[[i]]$UCI=plgon.coefs[[i]]$Estimate+1.96*plgon.coefs[[i]]$Std..Error
+  
+  plgon.coefs[[i]]$FC=10^(plgon.coefs[[i]]$Estimate)
+  plgon.coefs[[i]]$LFC=10^(plgon.coefs[[i]]$LCI)
+  plgon.coefs[[i]]$UFC=10^(plgon.coefs[[i]]$UCI)
+  plgon.coefs[[i]]$PC=((10^(plgon.coefs[[i]]$Estimate))-1)*100
+  plgon.coefs[[i]]$LPC=((10^(plgon.coefs[[i]]$LCI))-1)*100
+  plgon.coefs[[i]]$UPC=((10^(plgon.coefs[[i]]$UCI))-1)*100
+}
+
+names(plgon.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
+
+for (i in 1:6){
+  write.csv(plgon.coefs[[i]], paste0("ModelF_", bio_names[i],".csv"))
+}
+
+
+
+plgon<-data.frame()
+
+for (i in 1:6){
+  plgon<-rbind(plgon, plgon.coefs[[i]][2,])
+}
+
+################################################################################################################
+plgon.bus.coefs<-list()
+
+
+for (i in 1:6) {
+  
+  lmerG=lmer(log10(CC[,i])~log10(CC[,13])+CC[,7]+CC[,8]+CC[,9]+CC[,10]+CC[,11]+(1|CC[,12]))
+  plgon.bus.coefs[[i]]<-data.frame(coef(summary(lmerG)))# extract coefficients
+  plgon.bus.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(plgon.bus.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+  plgon.bus.coefs[[i]]$LCI=plgon.bus.coefs[[i]]$Estimate-1.96*plgon.bus.coefs[[i]]$Std..Error
+  plgon.bus.coefs[[i]]$UCI=plgon.bus.coefs[[i]]$Estimate+1.96*plgon.bus.coefs[[i]]$Std..Error
+  
+  plgon.bus.coefs[[i]]$FC=10^(plgon.bus.coefs[[i]]$Estimate)
+  plgon.bus.coefs[[i]]$LFC=10^(plgon.bus.coefs[[i]]$LCI)
+  plgon.bus.coefs[[i]]$UFC=10^(plgon.bus.coefs[[i]]$UCI)
+  plgon.bus.coefs[[i]]$PC=((10^(plgon.bus.coefs[[i]]$Estimate))-1)*100
+  plgon.bus.coefs[[i]]$LPC=((10^(plgon.bus.coefs[[i]]$LCI))-1)*100
+  plgon.bus.coefs[[i]]$UPC=((10^(plgon.bus.coefs[[i]]$UCI))-1)*100
+}
+
+names(plgon.bus.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
+
+for (i in 1:6){
+  write.csv(plgon.bus.coefs[[i]], paste0("ModelF_", bio_names[i],".csv"))
+}
+
+
+
+plgon.bus<-data.frame()
+
+for (i in 1:6){
+  plgon.bus<-rbind(plgon.bus, plgon.coefs[[i]][2,])
+}
+
+
+
+#######################################################################################################
+
+
+
+os2_LAIE_VKM_polyline_major <- read_csv("C:/Users/zy125/Box Sync/Postdoc/os2/os2_LAIE_VKM_polyline_major.csv")
+
+m<-str_remove_all(colnames(os2_LAIE_VKM_polyline_major), "join_")
+
+m[1]<-"id1"
+
+colnames(os2_LAIE_VKM_polyline_major)<-m
+
+
+Fulldata_polyline_major<-merge(Fulldata, os2_LAIE_VKM_polyline_major, by="id1", all.x=TRUE)
+
+############################################################################################################
+
+baseline_vkm_major=subset(Fulldata_polyline_major,Post==0)
+
+DD=data.frame()
+DD[1:238,1]=baseline_vkm_major$ANAP1_Cr
+DD[1:238,2]=baseline_vkm_major$ANAP2_Cr
+DD[1:238,3]=baseline_vkm_major$AFLU2_Cr
+DD[1:238,4]=baseline_vkm_major$APHE9_Cr
+DD[1:238,5]=baseline_vkm_major$APYR1_Cr
+DD[1:238,6]=baseline_vkm_major$TAPAHs_Cr
+DD[1:238,7]=baseline_vkm_major$COPD
+DD[1:238,8]=baseline_vkm_major$IHD
+DD[1:238,9]=baseline_vkm_major$Age
+DD[1:238,10]=baseline_vkm_major$Male
+DD[1:238,11]=baseline_vkm_major$BMI
+DD[1:238,12]=baseline_vkm_major[,1]
+DD[1:238,13]=baseline_vkm_major$AADTDcar13 
+DD[1:238,14]=baseline_vkm_major$VKMDCar13 
+DD[1:238,15]=baseline_vkm_major$distance
+DD[1:238,16]=baseline_vkm_major$VKMDCar13/baseline_vkm_major$distance
+
+
+DD=na.omit(DD)
+colnames(DD)<-c("ANAP1_Cr", "ANAP2_Cr","AFLU2_Cr","APHE9_Cr", "APYR1_Cr","TAPAHs_Cr",
+                "COPD", "IHD","Age","Male", "BMI","id", "AADTDcar13","VKMDCar13")
+#################################################################################################
+################################################################################################
+#######################AADTD####################################################################
+
+aadt.major.coefs<-list()
+
+
+for (i in 1:6) {
+  
+  lmerH=lmer(log10(DD[,i])~DD[,13]+DD[,7]+DD[,8]+DD[,9]+DD[,10]+DD[,11]+(1|DD[,12]))
+  aadt.major.coefs[[i]]<-data.frame(coef(summary(lmerH)))# extract coefficients
+  aadt.major.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(aadt.major.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+  aadt.major.coefs[[i]]$LCI=aadt.major.coefs[[i]]$Estimate-1.96*aadt.major.coefs[[i]]$Std..Error
+  aadt.major.coefs[[i]]$UCI=aadt.major.coefs[[i]]$Estimate+1.96*aadt.major.coefs[[i]]$Std..Error
+  
+  aadt.major.coefs[[i]]$FC=10^(aadt.major.coefs[[i]]$Estimate)
+  aadt.major.coefs[[i]]$LFC=10^(aadt.major.coefs[[i]]$LCI)
+  aadt.major.coefs[[i]]$UFC=10^(aadt.major.coefs[[i]]$UCI)
+  aadt.major.coefs[[i]]$PC=((10^(aadt.major.coefs[[i]]$Estimate))-1)*100
+  aadt.major.coefs[[i]]$LPC=((10^(aadt.major.coefs[[i]]$LCI))-1)*100
+  aadt.major.coefs[[i]]$UPC=((10^(aadt.major.coefs[[i]]$UCI))-1)*100
+}
+
+names(aadt.major.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
+
+for (i in 1:6){
+  write.csv(aadt.major.coefs[[i]], paste0("ModelH_", bio_names[i],".csv"))
+}
+
+
+
+aadt.major<-data.frame()
+
+for (i in 1:6){
+  aadt.major<-rbind(aadt.major, aadt.major.coefs[[i]][2,])
+}
+
+#################################################################################################
+################################################################################################
+#######################VKMD####################################################################
+
+vkmd.major.coefs<-list()
+
+
+for (i in 1:6) {
+  
+  lmerI=lmer(log10(DD[,i])~DD[,16]+DD[,7]+DD[,8]+DD[,9]+DD[,10]+DD[,11]+(1|DD[,12]))
+  vkmd.major.coefs[[i]]<-data.frame(coef(summary(lmerI)))# extract coefficients
+  vkmd.major.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(vkmd.major.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+  vkmd.major.coefs[[i]]$LCI=vkmd.major.coefs[[i]]$Estimate-1.96*vkmd.major.coefs[[i]]$Std..Error
+  vkmd.major.coefs[[i]]$UCI=vkmd.major.coefs[[i]]$Estimate+1.96*vkmd.major.coefs[[i]]$Std..Error
+  
+  vkmd.major.coefs[[i]]$FC=10^(vkmd.major.coefs[[i]]$Estimate)
+  vkmd.major.coefs[[i]]$LFC=10^(vkmd.major.coefs[[i]]$LCI)
+  vkmd.major.coefs[[i]]$UFC=10^(vkmd.major.coefs[[i]]$UCI)
+  vkmd.major.coefs[[i]]$PC=((10^(vkmd.major.coefs[[i]]$Estimate))-1)*100
+  vkmd.major.coefs[[i]]$LPC=((10^(vkmd.major.coefs[[i]]$LCI))-1)*100
+  vkmd.major.coefs[[i]]$UPC=((10^(vkmd.major.coefs[[i]]$UCI))-1)*100
+}
+
+names(vkmd.major.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
+
+for (i in 1:6){
+  write.csv(vkmd.major.coefs[[i]], paste0("ModelI_", bio_names[i],".csv"))
+}
+
+
+
+vkmd.major<-data.frame()
+
+for (i in 1:6){
+  vkmd.major<-rbind(vkmd.major, vkmd.major.coefs[[i]][2,])
+}
+
+
+
+
+##############################################################################################################
+#####################################9/11/2020 after discussing with yan, add some new data and analysis#####
+##################################################################################################################
+
+
+os2_LAEI_VKM_polyline_buffer100m <- read_csv("C:/Users/zy125/Box Sync/Postdoc/os2/os2_LAEI_VKM_polyline_buffer100m.csv")
+
+
+colnames(os2_LAEI_VKM_polyline_buffer100m)
+
+os2_buffer100m<-os2_LAEI_VKM_polyline_buffer100m[, c(1,51:76, 103, 109)]
+
+os2_buffer100m$aadt.tot.d<-os2_buffer100m$AADTDcar13+os2_buffer100m$AADTDLgv13+os2_buffer100m$AADTCoac_1+os2_buffer100m$AADTRigi_1+os2_buffer100m$AADTArti_1
+os2_buffer100m$aadt.tot.d.length<-os2_buffer100m$aadt.tot.d*os2_buffer100m$length_indi
+
+os2_buffer100m$vkm.tot.d<-os2_buffer100m$VKMDCar13+os2_buffer100m$VKMDLgv13+os2_buffer100m$VKMCoach13+os2_buffer100m$VKMRigid13+os2_buffer100m$VKMArtic13
+
+colnames(os2_buffer100m)[28]<-"id"
+
+os2_b100m<-os2_buffer100m %>% group_by(id) %>% 
+  summarize(aadt=sum(aadt.tot.d), aadt.length.d=sum(aadt.tot.d.length),vkm.d=sum(vkm.tot.d) )
+
+
+colnames(DD)[12]<-"id"
+
+DD<-merge(DD, o2_b100m, all.x = TRUE)
+
+DD[is.na(DD)]<-0
+
+DD<-DD[, c(2,3,4,5,6,7,8,9,10,11,12,1,13,14,15,16,17,18,19)]
+
+
+#################################################################################################
+################################################################################################
+#######################AADTD####################################################################
+
+aadt.buffer.coefs<-list()
+
+
+for (i in 1:6) {
+  
+  lmerO=lmer(log10(DD[,i])~DD[,17]+DD[,7]+DD[,8]+DD[,9]+DD[,10]+DD[,11]+(1|DD[,12]))
+  aadt.buffer.coefs[[i]]<-data.frame(coef(summary(lmerO)))# extract coefficients
+  aadt.buffer.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(aadt.buffer.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+  aadt.buffer.coefs[[i]]$LCI=aadt.buffer.coefs[[i]]$Estimate-1.96*aadt.buffer.coefs[[i]]$Std..Error
+  aadt.buffer.coefs[[i]]$UCI=aadt.buffer.coefs[[i]]$Estimate+1.96*aadt.buffer.coefs[[i]]$Std..Error
+  
+  aadt.buffer.coefs[[i]]$FC=10^(aadt.buffer.coefs[[i]]$Estimate)
+  aadt.buffer.coefs[[i]]$LFC=10^(aadt.buffer.coefs[[i]]$LCI)
+  aadt.buffer.coefs[[i]]$UFC=10^(aadt.buffer.coefs[[i]]$UCI)
+  aadt.buffer.coefs[[i]]$PC=((10^(aadt.buffer.coefs[[i]]$Estimate))-1)*100
+  aadt.buffer.coefs[[i]]$LPC=((10^(aadt.buffer.coefs[[i]]$LCI))-1)*100
+  aadt.buffer.coefs[[i]]$UPC=((10^(aadt.buffer.coefs[[i]]$UCI))-1)*100
+}
+
+names(aadt.buffer.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
+
+for (i in 1:6){
+  write.csv(aadt.buffer.coefs[[i]], paste0("ModelH_", bio_names[i],".csv"))
+}
+
+
+
+aadt.buffer<-data.frame()
+
+for (i in 1:6){
+  aadt.buffer<-rbind(aadt.buffer, aadt.buffer.coefs[[i]][2,])
+}
+#################################################################################################
+################################################################################################
+#######################AADTD####################################################################
+
+aadt.len.buffer.coefs<-list()
+
+
+for (i in 1:6) {
+  
+  lmerQ=lmer(log10(DD[,i])~DD[,18]+DD[,7]+DD[,8]+DD[,9]+DD[,10]+DD[,11]+(1|DD[,12]))
+  aadt.len.buffer.coefs[[i]]<-data.frame(coef(summary(lmerQ)))# extract coefficients
+  aadt.len.buffer.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(aadt.len.buffer.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+  aadt.len.buffer.coefs[[i]]$LCI=aadt.len.buffer.coefs[[i]]$Estimate-1.96*aadt.len.buffer.coefs[[i]]$Std..Error
+  aadt.len.buffer.coefs[[i]]$UCI=aadt.len.buffer.coefs[[i]]$Estimate+1.96*aadt.len.buffer.coefs[[i]]$Std..Error
+  
+  aadt.len.buffer.coefs[[i]]$FC=10^(aadt.len.buffer.coefs[[i]]$Estimate)
+  aadt.len.buffer.coefs[[i]]$LFC=10^(aadt.len.buffer.coefs[[i]]$LCI)
+  aadt.len.buffer.coefs[[i]]$UFC=10^(aadt.len.buffer.coefs[[i]]$UCI)
+  aadt.len.buffer.coefs[[i]]$PC=((10^(aadt.len.buffer.coefs[[i]]$Estimate))-1)*100
+  aadt.len.buffer.coefs[[i]]$LPC=((10^(aadt.len.buffer.coefs[[i]]$LCI))-1)*100
+  aadt.len.buffer.coefs[[i]]$UPC=((10^(aadt.len.buffer.coefs[[i]]$UCI))-1)*100
+}
+
+names(aadt.len.buffer.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
+
+for (i in 1:6){
+  write.csv(aadt.buffer.coefs[[i]], paste0("ModelH_", bio_names[i],".csv"))
+}
+
+
+
+aadt.len.buffer<-data.frame()
+
+for (i in 1:6){
+  aadt.len.buffer<-rbind(aadt.len.buffer, aadt.len.buffer.coefs[[i]][2,])
+}
+#################################################################################################
+################################################################################################
+#######################VKMD####################################################################
+
+vkmd.buffer.coefs<-list()
+
+
+for (i in 1:6) {
+  
+  lmerP=lmer(log10(DD[,i])~DD[,19]+DD[,7]+DD[,8]+DD[,9]+DD[,10]+DD[,11]+(1|DD[,12]))
+  vkmd.buffer.coefs[[i]]<-data.frame(coef(summary(lmerP)))# extract coefficients
+  vkmd.buffer.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(vkmd.buffer.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+  vkmd.buffer.coefs[[i]]$LCI=vkmd.buffer.coefs[[i]]$Estimate-1.96*vkmd.buffer.coefs[[i]]$Std..Error
+  vkmd.buffer.coefs[[i]]$UCI=vkmd.buffer.coefs[[i]]$Estimate+1.96*vkmd.buffer.coefs[[i]]$Std..Error
+  
+  vkmd.buffer.coefs[[i]]$FC=10^(vkmd.buffer.coefs[[i]]$Estimate)
+  vkmd.buffer.coefs[[i]]$LFC=10^(vkmd.buffer.coefs[[i]]$LCI)
+  vkmd.buffer.coefs[[i]]$UFC=10^(vkmd.buffer.coefs[[i]]$UCI)
+  vkmd.buffer.coefs[[i]]$PC=((10^(vkmd.buffer.coefs[[i]]$Estimate))-1)*100
+  vkmd.buffer.coefs[[i]]$LPC=((10^(vkmd.buffer.coefs[[i]]$LCI))-1)*100
+  vkmd.buffer.coefs[[i]]$UPC=((10^(vkmd.buffer.coefs[[i]]$UCI))-1)*100
+}
+
+names(vkmd.buffer.coefs)<-c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs")
+
+for (i in 1:6){
+  write.csv(vkmd.buffer.coefs[[i]], paste0("ModelI_", bio_names[i],".csv"))
+}
+
+
+
+vkmd.buffer<-data.frame()
+
+for (i in 1:6){
+  vkmd.buffer<-rbind(vkmd.buffer, vkmd.buffer.coefs[[i]][2,])
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
