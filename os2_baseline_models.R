@@ -7,7 +7,8 @@ library(scales)
 library(gridExtra)
 library(grid)
 library(stringr)
-require(dplyr)
+library(dplyr)
+library(readr)
 
 path<-"C:/Users/zy125/Box Sync/Postdoc/os2/data"
 
@@ -964,7 +965,10 @@ DD[1:238,16]=baseline_vkm_major$VKMDCar13/baseline_vkm_major$distance
 
 DD=na.omit(DD)
 colnames(DD)<-c("ANAP1_Cr", "ANAP2_Cr","AFLU2_Cr","APHE9_Cr", "APYR1_Cr","TAPAHs_Cr",
-                "COPD", "IHD","Age","Male", "BMI","id", "AADTDcar13","VKMDCar13")
+                "COPD", "IHD","Age","Male", "BMI","id", "AADTDcar13","VKMDCar13", "d.NN.major","vkm.inv.dis", 
+                )
+
+
 #################################################################################################
 ################################################################################################
 #######################AADTD####################################################################
@@ -1072,11 +1076,10 @@ colnames(os2_buffer100m)[28]<-"id"
 os2_b100m<-os2_buffer100m %>% group_by(id) %>% 
   summarize(aadt.d=sum(aadt.tot.d),aadt.p=sum(aadt.tot.p), 
             aadt.length.d=sum(aadt.tot.d.length),aadt.length.p=sum(aadt.tot.p.length),
-            vkm.d=sum(vkm.tot.d), vkm.p=sum(vkm.tot.p),
             aadt.taxi=sum(AADTTaxi13), aadt.moto=sum(AADTMoto_1),
             aadt.bus=sum(AADTLtBu_1), aadt.d.heavy=sum(AADTDLgv13+AADTCoac_1+AADTRigi_1+AADTArti_1),
-            aadt.moto=sum(VKMMotor_1),aadt.e=sum(AADTECar13+AADT_ELg_1),aadt.total=sum(AADTTOTA_1),
-            vkm.bus=sum(VKMBus13),
+            aadt.e=sum(AADTECar13+AADT_ELg_1),aadt.total=sum(AADTTOTA_1),
+            vkm.d=sum(vkm.tot.d), vkm.p=sum(vkm.tot.p),vkm.bus=sum(VKMBus13),
             vkm.taxi=sum(VKMTaxi13), vkm.d.heavy=sum(VKMDLgv13+VKMCoach13+VKMRigid13+VKMArtic13),
             vkm.e=sum(VKMECar13+VKMELgv13),vkm.total=sum(VKMTOTAL13)
             )
@@ -1089,6 +1092,9 @@ DD<-merge(DD, os2_b100m, all.x = TRUE)
 DD[is.na(DD)]<-0
 
 DD<-DD[, c(2,3,4,5,6,7,8,9,10,11,12,1,13:33)]
+
+colnames(DD)[1:16]<-c("ANAP1_Cr", "ANAP2_Cr","AFLU2_Cr","APHE9_Cr", "APYR1_Cr","TAPAHs_Cr",
+                "COPD", "IHD","Age","Male", "BMI","id", "nn.aadt.d","nn.vkm.d", "d.NN.major","vkm.inv.dis")
 
 
 #################################################################################################
@@ -1396,13 +1402,17 @@ for (i in 1:6){
 #################################################################################################
 ################################################################################################
 #######################AADTE####################################################################
+buffer.var<-list()
+result<-data.frame()
 
-indi.buffer.coefs<-list()
+for(j in 17:33){
+
+  indi.buffer.coefs<-list()
 
 
-for (i in 1:6) {
+   for (i in 1:6) {
   
-  lmerY=lmer(log10(DD[,i])~DD[,28]+DD[,7]+DD[,8]+DD[,9]+DD[,10]+DD[,11]+(1|DD[,12]))
+  lmerY=lmer(log10(DD[,i])~DD[,j]+DD[,7]+DD[,8]+DD[,9]+DD[,10]+DD[,11]+(1|DD[,12]))
   indi.buffer.coefs[[i]]<-data.frame(coef(summary(lmerY)))# extract coefficients
   indi.buffer.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(indi.buffer.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
   indi.buffer.coefs[[i]]$LCI=indi.buffer.coefs[[i]]$Estimate-1.96*indi.buffer.coefs[[i]]$Std..Error
@@ -1414,16 +1424,51 @@ for (i in 1:6) {
   indi.buffer.coefs[[i]]$PC=((10^(indi.buffer.coefs[[i]]$Estimate))-1)*100
   indi.buffer.coefs[[i]]$LPC=((10^(indi.buffer.coefs[[i]]$LCI))-1)*100
   indi.buffer.coefs[[i]]$UPC=((10^(indi.buffer.coefs[[i]]$UCI))-1)*100
+    }
+
+
+   indi.buffer<-data.frame()
+
+for (p in 1:6){
+
+    indi.buffer<-rbind(indi.buffer, indi.buffer.coefs[[p]][2,])
+   
+    }
+ buffer.var[[j-16]]<-indi.buffer
+ names(buffer.var[[j-16]])<-colnames(DD[j])
+
+ for (k in 1:6){
+  
+   result[j-16, 1+(k-1)*4]=buffer.var[[j-16]][k, 9]
+   result[j-16, 2+(k-1)*4]=buffer.var[[j-16]][k, 10]
+   result[j-16, 3+(k-1)*4]=buffer.var[[j-16]][k, 11]
+   result[j-16, 4+(k-1)*4]=buffer.var[[j-16]][k, 6]
+  
 }
 
 
-indi.buffer<-data.frame()
 
-for (i in 1:6){
-  indi.buffer<-rbind(indi.buffer, indi.buffer.coefs[[i]][2,])
 }
 
-print(indi.buffer)
+nam<-data.frame()
+
+for (u in 1:6){
+  nam<-append(nam, c(paste0("FC","(",bio_names[u],")"),
+                     paste0("LFC","(",bio_names[u],")"),paste0("UFC","(",bio_names[u],")"),
+                     paste0("p.value","(",bio_names[u],")")))
+  
+}
+colnames(result)<-nam
+
+result$nam<-colnames(DD[17:33])
+
+
+for (i in 1:17){
+  write.csv(buffer.var[[i]], paste0("Buffer_Model_",colnames(DD[i+16]),".csv"))
+
+  
+  
+}
 
 #################################################################################################
 ################################################################################################
