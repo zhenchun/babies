@@ -9,6 +9,7 @@ library(grid)
 library(stringr)
 library(dplyr)
 library(readr)
+library(robustHD)
 
 path<-"C:/Users/zy125/Box Sync/Postdoc/os2/data"
 
@@ -965,7 +966,7 @@ DD[1:238,16]=baseline_vkm_major$VKMDCar13/baseline_vkm_major$distance
 
 DD=na.omit(DD)
 colnames(DD)<-c("ANAP1_Cr", "ANAP2_Cr","AFLU2_Cr","APHE9_Cr", "APYR1_Cr","TAPAHs_Cr",
-                "COPD", "IHD","Age","Male", "BMI","id", "AADTDcar13","VKMDCar13", "d.NN.major","vkm.inv.dis", 
+                "COPD", "IHD","Age","Male", "BMI","id", "AADTDcar13","VKMDCar13", "d.NN.major","vkm.inv.dis"
                 )
 
 
@@ -1070,6 +1071,21 @@ os2_buffer100m$aadt.tot.p<-os2_buffer100m$AADTPcar13+os2_buffer100m$AADTPLgv13
 os2_buffer100m$aadt.tot.p.length<-os2_buffer100m$aadt.tot.p*os2_buffer100m$length_indi
 
 os2_buffer100m$vkm.tot.p<-os2_buffer100m$VKMPCar13+os2_buffer100m$VKMPLgv13
+#####six variables
+
+os2_buffer100m$AADTMoto_1_len<-os2_buffer100m$AADTMoto_1*os2_buffer100m$length_indi
+os2_buffer100m$AADTTaxi13_len<-os2_buffer100m$AADTTaxi13*os2_buffer100m$length_indi
+os2_buffer100m$AADTLtBu_1_len<-os2_buffer100m$AADTLtBu_1*os2_buffer100m$length_indi
+os2_buffer100m$AADTCoac_1_len<-os2_buffer100m$AADTCoac_1*os2_buffer100m$length_indi
+os2_buffer100m$AADTRigi_1_len<-os2_buffer100m$AADTRigi_1*os2_buffer100m$length_indi
+os2_buffer100m$AADTArti_1_len<-os2_buffer100m$AADTArti_1*os2_buffer100m$length_indi
+os2_buffer100m$AADTTOTA_1_len<-os2_buffer100m$AADTTOTA_1*os2_buffer100m$length_indi
+
+
+
+
+
+
 
 colnames(os2_buffer100m)[28]<-"id"
 
@@ -1098,6 +1114,21 @@ colnames(DD)[1:16]<-c("ANAP1_Cr", "ANAP2_Cr","AFLU2_Cr","APHE9_Cr", "APYR1_Cr","
 
 
 
+
+
+os2_b100m_len<-os2_buffer100m %>% group_by(id) %>% 
+  summarize(aadt.moto_len=sum(AADTMoto_1_len), aadt.taxi_len=sum(AADTTaxi13_len),
+            aadt.bus_len=sum(AADTLtBu_1_len),aadt.coach_len=sum(AADTCoac_1_len),
+            aadt.rigid_len=sum(AADTRigi_1_len), aadt.artic_len=sum(AADTArti_1_len),
+            aadt.total_len=sum(AADTTOTA_1_len)
+             )
+
+
+EE<-merge(DD, os2_b100m_len, all.x = TRUE)
+
+EE[is.na(EE)]<-0
+
+EE<-EE[, c(2,3,4,5,6,7,8,9,10,11,12,1,13:40)]
 
 #################################################################################################
 ################################################################################################
@@ -1165,8 +1196,113 @@ result$nam<-colnames(DD[17:33])
 
 for (i in 1:17){
   write.csv(buffer.var[[i]], paste0("Buffer_Model_",colnames(DD[i+16]),".csv"))
+}
 
+
+################################################################################################
+#####six length variables
+
+FF=data.frame()
+
+FF<-EE[, c(1:12,34:40)]
+FF[,13]<-standardize(EE[,34], centerFun=mean, scaleFun = sd)
+FF[,14]<-standardize(EE[,35], centerFun=mean, scaleFun = sd)
+FF[,15]<-standardize(EE[,36], centerFun=mean, scaleFun = sd)
+FF[,16]<-standardize(EE[,37], centerFun=mean, scaleFun = sd)
+FF[,17]<-standardize(EE[,38], centerFun=mean, scaleFun = sd)
+FF[,18]<-standardize(EE[,39], centerFun=mean, scaleFun = sd)
+FF[,19]<-standardize(EE[,40], centerFun=mean, scaleFun = sd)
+
+
+
+len.var<-list()
+result_len<-data.frame()
+
+for(j in 13:19){
+  
+  indi.len.coefs<-list()
+  
+  
+  for (i in 1:6) {
+    
+    lmerZ=lmer(log10(FF[,i])~FF[,j]+FF[,7]+FF[,8]+FF[,9]+FF[,10]+FF[,11]+(1|FF[,12]))
+    indi.len.coefs[[i]]<-data.frame(coef(summary(lmerZ)))# extract coefficients
+    indi.len.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(indi.len.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
+    indi.len.coefs[[i]]$LCI=indi.len.coefs[[i]]$Estimate-1.96*indi.len.coefs[[i]]$Std..Error
+    indi.len.coefs[[i]]$UCI=indi.len.coefs[[i]]$Estimate+1.96*indi.len.coefs[[i]]$Std..Error
+    
+    indi.len.coefs[[i]]$FC=10^(indi.len.coefs[[i]]$Estimate)
+    indi.len.coefs[[i]]$LFC=10^(indi.len.coefs[[i]]$LCI)
+    indi.len.coefs[[i]]$UFC=10^(indi.len.coefs[[i]]$UCI)
+    indi.len.coefs[[i]]$PC=((10^(indi.len.coefs[[i]]$Estimate))-1)*100
+    indi.len.coefs[[i]]$LPC=((10^(indi.len.coefs[[i]]$LCI))-1)*100
+    indi.len.coefs[[i]]$UPC=((10^(indi.len.coefs[[i]]$UCI))-1)*100
+  }
+  
+  
+  indi.len<-data.frame()
+  
+  for (p in 1:6){
+    
+    indi.len<-rbind(indi.len, indi.len.coefs[[p]][2,])
+    
+  }
+  len.var[[j-12]]<-indi.len
+  names(len.var[[j-12]])<-colnames(FF[j])
+  
+  for (k in 1:6){
+    
+    result_len[j-12, 1+(k-1)*4]=len.var[[j-12]][k, 9]
+    result_len[j-12, 2+(k-1)*4]=len.var[[j-12]][k, 10]
+    result_len[j-12, 3+(k-1)*4]=len.var[[j-12]][k, 11]
+    result_len[j-12, 4+(k-1)*4]=len.var[[j-12]][k, 6]
+    
+  }
+  
   
   
 }
+
+nam.len<-data.frame()
+
+for (u in 1:6){
+  nam.len<-append(nam.len, c(paste0("FC","(",bio_names[u],")"),
+                     paste0("LFC","(",bio_names[u],")"),paste0("UFC","(",bio_names[u],")"),
+                     paste0("p.value","(",bio_names[u],")")))
+  
+}
+colnames(result_len)<-nam.len
+
+result_len$nam.len<-colnames(FF[13:19])
+
+
+for (i in 1:6){
+  write.csv(len.var[[i]], paste0("Len_Model_",colnames(FF[i+12]),".csv"))
+}
+
+
+###############################################################
+
+library(readxl)
+length <- read_excel("length.xlsx")
+colnames(length)[7]<-"significance"
+
+length$significance<-as.logical(length$significance)
+
+length$biomarker<-factor(length$biomarker, c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs"))
+
+ggplot(length, aes(y=FC, x=biomarker,color=significance))+
+  geom_pointrange(aes(ymax=UFC, ymin=LFC, shape=type), position = pd, size=0.8)+
+  geom_vline(xintercept = c(1.5,2.5,3.5,4.5, 5.5),linetype="dotted", size=1)+
+  geom_hline(yintercept = 1)+theme_classic()+theme(legend.position="bottom")+ 
+  guides(guide_legend(nrow = 1))+scale_colour_manual(values=c("black", "red"))+labs(y="Fold Change")
+
+
+
+
+
+
+
+
+
 
