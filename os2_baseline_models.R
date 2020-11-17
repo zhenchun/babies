@@ -1049,6 +1049,7 @@ for (i in 1:6){
 
 ##############################################################################################################
 #####################################9/11/2020 after discussing with yan, add some new data and analysis#####
+#####################buffer is needed ranther than distance##################################################
 ##################################################################################################################
 
 
@@ -1071,7 +1072,7 @@ os2_buffer100m$aadt.tot.p<-os2_buffer100m$AADTPcar13+os2_buffer100m$AADTPLgv13
 os2_buffer100m$aadt.tot.p.length<-os2_buffer100m$aadt.tot.p*os2_buffer100m$length_indi
 
 os2_buffer100m$vkm.tot.p<-os2_buffer100m$VKMPCar13+os2_buffer100m$VKMPLgv13
-#####six variables
+#####six variables AADT*length
 
 os2_buffer100m$AADTMoto_1_len<-os2_buffer100m$AADTMoto_1*os2_buffer100m$length_indi
 os2_buffer100m$AADTTaxi13_len<-os2_buffer100m$AADTTaxi13*os2_buffer100m$length_indi
@@ -1132,7 +1133,8 @@ EE<-EE[, c(2,3,4,5,6,7,8,9,10,11,12,1,13:40)]
 
 #################################################################################################
 ################################################################################################
-#######################AADTE####################################################################
+#######################AADT####################################################################
+############using one loop to combine all results together##############################
 buffer.var<-list()
 result<-data.frame()
 
@@ -1205,7 +1207,7 @@ for (i in 1:17){
 FF=data.frame()
 
 FF<-EE[, c(1:12,34:40)]
-FF[,13]<-standardize(EE[,34], centerFun=mean, scaleFun = sd)
+FF[,13]<-standardize(EE[,34], centerFun=mean, scaleFun = sd)#####standardize x variables 
 FF[,14]<-standardize(EE[,35], centerFun=mean, scaleFun = sd)
 FF[,15]<-standardize(EE[,36], centerFun=mean, scaleFun = sd)
 FF[,16]<-standardize(EE[,37], centerFun=mean, scaleFun = sd)
