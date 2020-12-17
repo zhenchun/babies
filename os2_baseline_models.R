@@ -1311,6 +1311,7 @@ colnames(length)[7]<-"significance"
 length$significance<-as.logical(length$significance)
 
 length_v1$biomarker<-factor(length_v1$biomarker, c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs"))
+length_v1$type<-factor(length_v1$type, c("Motorbike", "Taxi", "Bus","Coach", "Rigid HGV", "Artic HGV" ))
 
 ggplot(length, aes(y=FC, x=biomarker,color=significance,shape=type))+ 
   geom_point( position = position_dodge(width = 1), size=2)+
@@ -1326,7 +1327,9 @@ ggplot(length_v1, aes(y=FC, x=biomarker,color=significance,shape=type))+
   geom_errorbar(aes(ymax=UFC, ymin=LFC), position = position_dodge(width = 1),size=0.8, width=0.2)+
   geom_vline(xintercept = c(1.5,2.5,3.5,4.5, 5.5),linetype="dotted", size=1)+
   geom_hline(yintercept = 1)+theme_classic()+theme(legend.position="bottom")+ 
-  guides(guide_legend(nrow = 1))+scale_colour_manual(values=c("black", "red"))+labs(y="Fold Change")
+  guides(guide_legend(nrow = 1))+scale_colour_manual(values=c("black", "red"))+labs(y="Fold Change")+
+  scale_x_discrete(labels=c("1-ANAP", "2-ANAP", "2-AFLU", "9-APHE", "1-APYR", "TAPAHs"))+
+  theme(text = element_text(size=14)) 
 
 
 ################################################################################################
@@ -1352,10 +1355,14 @@ age_female<-FF[which(FF$Male==0),]%>%group_by(id)%>%summarise(age=unique(Age))
 
 fuel_$biomarker<-factor(fuel_$biomarker, c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs"))
 
+fuel_$type<-factor(fuel_$type, c("Diesel Traffic Flow", "Petrol Traffic Flow","Diesel Traffic Volume","Petrol Traffic Volume", "Diesel HGV Traffic Flow","Total Traffic Flow"))
+
 ggplot(fuel_, aes(y=FC, x=biomarker,color=significance,shape=type))+ 
   geom_point( position = position_dodge(width = 1), size=2)+
   geom_errorbar(aes(ymax=UFC, ymin=LFC), position = position_dodge(width = 1),size=0.8, width=0.2)+
   geom_vline(xintercept = c(1.5,2.5,3.5,4.5, 5.5),linetype="dotted", size=1)+
   geom_hline(yintercept = 1)+theme_classic()+theme(legend.position="bottom")+ 
-  guides(guide_legend(nrow = 1))+scale_colour_manual(values=c("black", "red"))+labs(y="Fold Change")
+  guides(guide_legend(nrow = 1))+scale_colour_manual(values=c("black", "red"))+labs(y="Fold Change")+
+  scale_x_discrete(labels=c("1-ANAP", "2-ANAP", "2-AFLU", "9-APHE", "1-APYR", "TAPAHs"))+
+  theme(text = element_text(size=14)) 
 
