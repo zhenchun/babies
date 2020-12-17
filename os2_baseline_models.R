@@ -930,7 +930,7 @@ for (i in 1:6){
 
 
 
-os2_LAIE_VKM_polyline_major <- read_csv("C:/Users/zy125/Box Sync/Postdoc/os2/os2_LAIE_VKM_polyline_major.csv")
+os2_LAIE_VKM_polyline_major <- read_csv("C:/Users/zy125/Box Sync/Postdoc/os2/os2_LAEI2016_AADT_VKM_toid_Major.csv")
 
 m<-str_remove_all(colnames(os2_LAIE_VKM_polyline_major), "join_")
 
@@ -1053,7 +1053,7 @@ for (i in 1:6){
 ##################################################################################################################
 
 
-os2_LAEI_VKM_polyline_buffer100m <- read_csv("C:/Users/zy125/Box Sync/Postdoc/os2/os2_LAEI_VKM_polyline_buffer100m.csv")
+os2_LAEI_VKM_polyline_buffer100m <- read_csv("C:/Users/zy125/Box Sync/Postdoc/os2/os2_LAEI2016_AADT_VKM_toid_Major_buffer100m.csv")
 
 
 colnames(os2_LAEI_VKM_polyline_buffer100m)
@@ -1138,14 +1138,33 @@ EE<-EE[, c(2,3,4,5,6,7,8,9,10,11,12,1,13:40)]
 buffer.var<-list()
 result<-data.frame()
 
-for(j in 17:33){
+
+HH=data.frame()
+
+HH<-DD[, c(1:12)]
+HH[,13]<-standardize(DD[,17], centerFun=mean, scaleFun = sd)#####standardize x variables 
+HH[,14]<-standardize(DD[,18], centerFun=mean, scaleFun = sd)
+HH[,15]<-standardize(DD[,19], centerFun=mean, scaleFun = sd)
+HH[,16]<-standardize(DD[,20], centerFun=mean, scaleFun = sd)
+HH[,17]<-standardize(DD[,24], centerFun=mean, scaleFun = sd)
+HH[,18]<-standardize(DD[,25], centerFun=mean, scaleFun = sd)
+HH[,19]<-standardize(DD[,26], centerFun=mean, scaleFun = sd)
+HH[,20]<-standardize(DD[,27], centerFun=mean, scaleFun = sd)
+HH[,21]<-standardize(DD[,28], centerFun=mean, scaleFun = sd)
+HH[,22]<-standardize(DD[,31], centerFun=mean, scaleFun = sd)
+HH[,23]<-standardize(DD[,32], centerFun=mean, scaleFun = sd)
+HH[,24]<-standardize(DD[,33], centerFun=mean, scaleFun = sd)
+
+
+
+for(j in 13:24){
 
   indi.buffer.coefs<-list()
 
 
    for (i in 1:6) {
   
-  lmerY=lmer(log10(DD[,i])~DD[,j]+DD[,7]+DD[,8]+DD[,9]+DD[,10]+DD[,11]+(1|DD[,12]))
+  lmerY=lmer(log10(HH[,i])~HH[,j]+HH[,7]+HH[,8]+HH[,9]+HH[,10]+HH[,11]+(1|HH[,12]))
   indi.buffer.coefs[[i]]<-data.frame(coef(summary(lmerY)))# extract coefficients
   indi.buffer.coefs[[i]]$p.z <- 2 * (1 - pnorm(abs(indi.buffer.coefs[[i]]$t.value)))# use normal distribution to approximate p-value
   indi.buffer.coefs[[i]]$LCI=indi.buffer.coefs[[i]]$Estimate-1.96*indi.buffer.coefs[[i]]$Std..Error
@@ -1167,15 +1186,15 @@ for (p in 1:6){
     indi.buffer<-rbind(indi.buffer, indi.buffer.coefs[[p]][2,])
    
     }
- buffer.var[[j-16]]<-indi.buffer
- names(buffer.var[[j-16]])<-colnames(DD[j])
+ buffer.var[[j-12]]<-indi.buffer
+ names(buffer.var[[j-12]])<-colnames(DD[j])
 
  for (k in 1:6){
   
-   result[j-16, 1+(k-1)*4]=buffer.var[[j-16]][k, 9]
-   result[j-16, 2+(k-1)*4]=buffer.var[[j-16]][k, 10]
-   result[j-16, 3+(k-1)*4]=buffer.var[[j-16]][k, 11]
-   result[j-16, 4+(k-1)*4]=buffer.var[[j-16]][k, 6]
+   result[j-12, 1+(k-1)*4]=buffer.var[[j-12]][k, 9]
+   result[j-12, 2+(k-1)*4]=buffer.var[[j-12]][k, 10]
+   result[j-12, 3+(k-1)*4]=buffer.var[[j-12]][k, 11]
+   result[j-12, 4+(k-1)*4]=buffer.var[[j-12]][k, 6]
   
 }
 
@@ -1193,7 +1212,7 @@ for (u in 1:6){
 }
 colnames(result)<-nam
 
-result$nam<-colnames(DD[17:33])
+result$nam<-colnames(DD)[c(17,18,19,20,24,25,26,27,28,31,32,33)]
 
 
 for (i in 1:17){
@@ -1291,20 +1310,52 @@ colnames(length)[7]<-"significance"
 
 length$significance<-as.logical(length$significance)
 
-length$biomarker<-factor(length$biomarker, c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs"))
+length_v1$biomarker<-factor(length_v1$biomarker, c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs"))
 
-ggplot(length, aes(y=FC, x=biomarker,color=significance))+
-  geom_pointrange(aes(ymax=UFC, ymin=LFC, shape=type), position = pd, size=0.8)+
+ggplot(length, aes(y=FC, x=biomarker,color=significance,shape=type))+ 
+  geom_point( position = position_dodge(width = 1), size=2)+
+  geom_errorbar(aes(ymax=UFC, ymin=LFC), position = position_dodge(width = 1),size=0.8, width=0.2)+
   geom_vline(xintercept = c(1.5,2.5,3.5,4.5, 5.5),linetype="dotted", size=1)+
   geom_hline(yintercept = 1)+theme_classic()+theme(legend.position="bottom")+ 
   guides(guide_legend(nrow = 1))+scale_colour_manual(values=c("black", "red"))+labs(y="Fold Change")
 
 
 
+ggplot(length_v1, aes(y=FC, x=biomarker,color=significance,shape=type))+ 
+  geom_point( position = position_dodge(width = 1), size=2)+
+  geom_errorbar(aes(ymax=UFC, ymin=LFC), position = position_dodge(width = 1),size=0.8, width=0.2)+
+  geom_vline(xintercept = c(1.5,2.5,3.5,4.5, 5.5),linetype="dotted", size=1)+
+  geom_hline(yintercept = 1)+theme_classic()+theme(legend.position="bottom")+ 
+  guides(guide_legend(nrow = 1))+scale_colour_manual(values=c("black", "red"))+labs(y="Fold Change")
+
+
+################################################################################################
+###########summarize FF########################################################################
+###############################################################################################
 
 
 
+age_copd<-FF[which(FF$COPD==1),]%>%group_by(id)%>%summarise(age=unique(Age))
+mean(age_copd$age)
+
+age_IHD<-FF[which(FF$IHD==1),]%>%group_by(id)%>%summarise(age=unique(Age))
+mean(age_IHD$age)
+
+age_healthy<-FF[-which(FF$IHD==1 | FF$COPD==1),]%>%group_by(id)%>%summarise(age=unique(Age))
+
+age_male<-FF[which(FF$Male==1),]%>%group_by(id)%>%summarise(age=unique(Age))
+
+age_female<-FF[which(FF$Male==0),]%>%group_by(id)%>%summarise(age=unique(Age))
+
+######################################################################################################
 
 
+fuel_$biomarker<-factor(fuel_$biomarker, c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs"))
 
+ggplot(fuel_, aes(y=FC, x=biomarker,color=significance,shape=type))+ 
+  geom_point( position = position_dodge(width = 1), size=2)+
+  geom_errorbar(aes(ymax=UFC, ymin=LFC), position = position_dodge(width = 1),size=0.8, width=0.2)+
+  geom_vline(xintercept = c(1.5,2.5,3.5,4.5, 5.5),linetype="dotted", size=1)+
+  geom_hline(yintercept = 1)+theme_classic()+theme(legend.position="bottom")+ 
+  guides(guide_legend(nrow = 1))+scale_colour_manual(values=c("black", "red"))+labs(y="Fold Change")
 
