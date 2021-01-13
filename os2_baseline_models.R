@@ -233,17 +233,20 @@ write.csv(road_length, "road_length.csv")
 
 pd <- position_dodge(width = 1)
 
-p1<-ggplot(road_length, aes(y=PC*10, x=names))+
+tiff("figure1.tiff", width = 800, height = 450)
+
+ggplot(road_length, aes(y=PC*10, x=names))+
   geom_pointrange(aes(ymax=UPC*10, ymin=LPC*10, color=type), position = pd, size=0.8)+
   geom_vline(xintercept = c(1.5,2.5,3.5,4.5, 5.5),linetype="dotted", size=1)+
   geom_hline(yintercept = 0)+theme_classic()+
   scale_color_manual(values=c("black","deepskyblue","coral"),labels = c("Major Roads","Minor Roads","All Roads"))+
-  labs(x="biomarker names", y="Percentage Change (%, 95%CI)")+
-  scale_x_discrete(labels=c("1-ANAP", "2-ANAP", "2-AFLU", "9-APHE", "1-APYR", "TAPAHs"))+
+  scale_x_discrete(labels=c("1-ANAP", "2-ANAP", "2-AFLU", "9-APHE", "1-APYR", "TAPAHs"))+ labs(y=expression(paste("                         Change in Biomarker (%, 95%CI)  \n per 10m increase in the length of major roads within 100m buffer")))+
   geom_text(x=2.67, y=7.75, label="*", size=5)+
-  theme(legend.title=element_blank(),legend.position="bottom",axis.text.x = element_text(size=14), axis.text.y = element_text(size=14),legend.text=element_text(size=14), 
-        axis.title.x=element_blank(), axis.title.y = element_text(size=16),legend.key.size=unit(4, "points"))
+  theme(legend.title=element_blank(),axis.text.x = element_text(size=12), axis.text.y = element_text(size=12),legend.text=element_text(size=12), 
+        axis.title.x=element_blank(), axis.title.y = element_text(size=12, vjust=0.5,margin = margin(2, 0, 0, 10)),legend.key.size=unit(4, "points"),legend.position="bottom")
 
+
+dev.off()
 ##############################################################################################
 ####test the roadlength within 100m buffers effect on concentrations modified by sex##########
 ##############################################################################################
@@ -516,7 +519,7 @@ AA$Group<-factor(AA$Group, c("HEALTHY","COPD","IHD"))
   p8<-ggplot(AA, aes(x=Group, y=TAPAHs_Cr, fill=Group))+geom_boxplot()+
     scale_y_log10(breaks=c(0.01,0.1,1,10,100,1000,10000),labels=c(0.01,0.1,1,10,100,1000, 10000),limits=c(0.01,10000))+
     theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
-                     axis.title.y=element_blank(),legend.position="none")+ggtitle("F.\u03A3TAPAHs")+
+                     axis.title.y=element_blank(),legend.position="none")+ggtitle("F.\u03A3APAHs")+
     stat_summary(fun= mean, geom="point", color="red", shape=15,size=2)+
     annotate("rect", xmin = 1, xmax = 2, ymin = 1000, ymax =1000, alpha=1,colour = "black")+
     annotate("rect", xmin = 1, xmax = 1, ymin = 800, ymax =1000, alpha=1,colour = "black")+
@@ -525,13 +528,13 @@ AA$Group<-factor(AA$Group, c("HEALTHY","COPD","IHD"))
     annotate("rect", xmin = 1, xmax = 3, ymin = 3500, ymax =3500, alpha=1,colour = "black")+
     annotate("rect", xmin = 1, xmax = 1, ymin = 2500, ymax =3500, alpha=1,colour = "black")+
     annotate("rect", xmin = 3, xmax = 3, ymin = 2500, ymax =3500, alpha=1,colour = "black")+
-    geom_text(aes(x=2, y=4000, label="***", size=8))
+    geom_text(aes(x=2, y=4000, label="**", size=8))
   
   ####p9 is not in the final figure
   p9<-ggplot(AA, aes(x=Group, y=TAPAHs_Cr, fill=Group))+geom_boxplot()+
     scale_y_log10(breaks=c(0.01,0.1,1,10,100,1000,10000),labels=c(0.01,0.1,1,10,100,1000, 10000),limits=c(0.01,10000))+
     theme_bw()+theme(panel.grid.major = element_blank(),panel.grid.minor = element_blank(),axis.title.x=element_blank(),
-                     axis.title.y=element_blank(), legend.position = "bottom")+ggtitle("F.\u03A3TAPAHs")
+                     axis.title.y=element_blank(), legend.position = "bottom")+ggtitle("F.\u03A3APAHs")
     
   
   #p9 is only used for extract legend
@@ -1072,7 +1075,7 @@ os2_buffer100m$aadt.tot.p<-os2_buffer100m$AADTPcar13+os2_buffer100m$AADTPLgv13
 os2_buffer100m$aadt.tot.p.length<-os2_buffer100m$aadt.tot.p*os2_buffer100m$length_indi
 
 os2_buffer100m$vkm.tot.p<-os2_buffer100m$VKMPCar13+os2_buffer100m$VKMPLgv13
-#####six variables AADT*length
+#####six variables AADT*length#####for the traffic volume analysis
 
 os2_buffer100m$AADTMoto_1_len<-os2_buffer100m$AADTMoto_1*os2_buffer100m$length_indi
 os2_buffer100m$AADTTaxi13_len<-os2_buffer100m$AADTTaxi13*os2_buffer100m$length_indi
@@ -1221,7 +1224,7 @@ for (i in 1:17){
 
 
 ################################################################################################
-#####six length variables
+#####six length variables####trafic volume###################################################
 
 FF=data.frame()
 
@@ -1313,6 +1316,8 @@ length$significance<-as.logical(length$significance)
 length_v1$biomarker<-factor(length_v1$biomarker, c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs"))
 length_v1$type<-factor(length_v1$type, c("Motorbike", "Taxi", "Bus","Coach", "Rigid HGV", "Artic HGV" ))
 
+
+
 ggplot(length, aes(y=FC, x=biomarker,color=significance,shape=type))+ 
   geom_point( position = position_dodge(width = 1), size=2)+
   geom_errorbar(aes(ymax=UFC, ymin=LFC), position = position_dodge(width = 1),size=0.8, width=0.2)+
@@ -1321,16 +1326,18 @@ ggplot(length, aes(y=FC, x=biomarker,color=significance,shape=type))+
   guides(guide_legend(nrow = 1))+scale_colour_manual(values=c("black", "red"))+labs(y="Fold Change")
 
 
-
-ggplot(length_v1, aes(y=FC, x=biomarker,color=significance,shape=type))+ 
+tiff("figure3.tiff", width = 800, height = 450)
+ggplot(length_v1, aes(y=FC, x=biomarker,shape=type,color=significance))+ 
   geom_point( position = position_dodge(width = 1), size=2)+
   geom_errorbar(aes(ymax=UFC, ymin=LFC), position = position_dodge(width = 1),size=0.8, width=0.2)+
   geom_vline(xintercept = c(1.5,2.5,3.5,4.5, 5.5),linetype="dotted", size=1)+
   geom_hline(yintercept = 1)+theme_classic()+theme(legend.position="bottom")+ 
   guides(guide_legend(nrow = 1))+scale_colour_manual(values=c("black", "red"))+labs(y="Fold Change")+
   scale_x_discrete(labels=c("1-ANAP", "2-ANAP", "2-AFLU", "9-APHE", "1-APYR", "TAPAHs"))+
-  theme(text = element_text(size=14)) 
+  labs(color="Significance",shape="Traffic Volume of Different Vehicles",y=expression(paste("       Change in Biomarker (Fold Change , 95%CI)  \n    per one unit increase in standardized traffic volume")))+
+  theme(text = element_text(size=12),axis.title.x=element_blank(), axis.title.y = element_text(size=12, vjust=0.5,margin = margin(2, 0, 0, 10)))+ scale_y_continuous(breaks=seq(0.0, 3.0, 0.5), limits=c(0, 3.0))
 
+dev.off()
 
 ################################################################################################
 ###########summarize FF########################################################################
@@ -1355,7 +1362,9 @@ age_female<-FF[which(FF$Male==0),]%>%group_by(id)%>%summarise(age=unique(Age))
 
 fuel_$biomarker<-factor(fuel_$biomarker, c("ANAP1", "ANAP2","AFLU2","APHE9", "APYR1","TAPAHs"))
 
-fuel_$type<-factor(fuel_$type, c("Diesel Traffic Flow", "Petrol Traffic Flow","Diesel Traffic Volume","Petrol Traffic Volume", "Diesel HGV Traffic Flow","Total Traffic Flow"))
+fuel_$type<-factor(fuel_$type, c("Diesel Traffic Volume","Petrol Traffic Volume"))
+
+tiff("figure2.tiff", width = 800, height = 450)
 
 ggplot(fuel_, aes(y=FC, x=biomarker,color=significance,shape=type))+ 
   geom_point( position = position_dodge(width = 1), size=2)+
@@ -1364,5 +1373,7 @@ ggplot(fuel_, aes(y=FC, x=biomarker,color=significance,shape=type))+
   geom_hline(yintercept = 1)+theme_classic()+theme(legend.position="bottom")+ 
   guides(guide_legend(nrow = 1))+scale_colour_manual(values=c("black", "red"))+labs(y="Fold Change")+
   scale_x_discrete(labels=c("1-ANAP", "2-ANAP", "2-AFLU", "9-APHE", "1-APYR", "TAPAHs"))+
-  theme(text = element_text(size=14)) 
+  labs(color="Significance",shape="Traffic Type",y=expression(paste("       Change in Biomarker (Fold Change , 95%CI)  \n    per one unit increase in standardized traffic volume")))+
+  theme(text = element_text(size=14),axis.title.x=element_blank(), axis.title.y = element_text(size=12, vjust=0.5,margin = margin(2, 0, 0, 10)))+ scale_y_continuous(breaks=seq(0.0, 3.0, 0.5), limits=c(0, 3.0))
 
+dev.off()
